@@ -21,6 +21,3 @@ def compute_variance(x, p=2):
         covariance += np.outer(deviations[i], deviations[i])
     covariance /= B
     return np.sqrt(np.linalg.norm(covariance, p))# / x.shape[1])
-
-X = np.random.normal(0, 2.0, (1000, 5))
-print(compute_variance(X))

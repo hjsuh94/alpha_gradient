@@ -10,8 +10,8 @@ from norms import LpNorm
 
 p = 5
 dmax = 50
-n_gradient_samples = 100
-n_samples = 1000
+n_gradient_samples = 10
+n_samples = 10
 sigma = 0.2
 
 fom_storage = []
@@ -53,7 +53,7 @@ for d in tqdm(range(1,dmax+1)):
     fov_storage_fro[d-1] = compute_variance(fobg_storage, 'fro')
     zov_storage_fro[d-1] = compute_variance(zobg_storage, 'fro')        
 
-plt.figure()
+plt.figure(figsize=(16,12))
 plt.plot(range(d), fov_storage, 'r-', label='Variance of FOBG (2-norm)')
 plt.plot(range(d), zov_storage, 'b-', label='Variance of ZOBG (2-norm)')
 
@@ -67,4 +67,5 @@ plt.plot(range(d), fom_zom_diff, color='springgreen',
     label='Diff between FOBM and ZOBM (2-norm)')
 plt.xlabel('Dimension (d)')
 plt.legend()
+plt.savefig("results.png")
 plt.show()
