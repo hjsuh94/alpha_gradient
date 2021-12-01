@@ -65,5 +65,6 @@ class ZobgdNp(TrajectoryOptimizerNp):
 
         u_trj_new = u_trj - self.step_size * zobg
         x_trj_new = self.system.rollout(self.x0, u_trj_new)
+        self.w_std = self.variance_scheduler(self.iter, self.initial_std)
 
         return x_trj_new, u_trj_new

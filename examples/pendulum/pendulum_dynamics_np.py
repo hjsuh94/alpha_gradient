@@ -2,7 +2,7 @@ import numpy as np
 import pydrake.symbolic as ps
 import time
 
-from alpha_gradient.dynamical_system_np import DynamicalSystemNp
+from alpha_gradient.numpy.dynamical_system_np import DynamicalSystemNp
 
 class PendulumDynamicsNp(DynamicalSystemNp):
     def __init__(self, h):
