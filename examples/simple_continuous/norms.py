@@ -1,8 +1,10 @@
 import numpy as np
 import time
+import warnings
+warnings.filterwarnings('error')
 
 from pydrake.all import InitializeAutoDiff, ExtractGradient
-from jump_sgd.objective_function import ObjectiveFunction
+from alpha_gradient.objective_function import ObjectiveFunction
 
 class LpNorm(ObjectiveFunction):
     def __init__(self, p, d):

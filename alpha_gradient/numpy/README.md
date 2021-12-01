@@ -1,0 +1,1 @@
+Implementations in this folder uses standard `np.array`, and Drake (Eigen)'s Autodiff feature for computation of gradients.
