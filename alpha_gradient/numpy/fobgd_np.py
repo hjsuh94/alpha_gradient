@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 
 from alpha_gradient.trajectory_optimizer import (
     TrajoptParameters, TrajectoryOptimizer)
+from alpha_gradient.numpy.trajectory_optimizer_np import (
+    TrajectoryOptimizerNp
+)    
 from pydrake.all import InitializeAutoDiff, ExtractGradient
 
 class FobgdParams(TrajoptParameters):
@@ -21,7 +24,7 @@ class FobgdParams(TrajoptParameters):
         self.initial_std = None # dim T x m array of initial stds.
         self.variance_scheduler = None # Variance scheduler.
 
-class FobgdNp(TrajectoryOptimizer):
+class FobgdNp(TrajectoryOptimizerNp):
     def __init__(self, system, params):
         super().__init__(system, params)
         

@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 
 from alpha_gradient.trajectory_optimizer import (
     TrajoptParameters, TrajectoryOptimizer)
+from alpha_gradient.numpy.trajectory_optimizer_np import (
+    TrajectoryOptimizerNp
+)    
 
 class ZobgdParams(TrajoptParameters):
     def __init__(self):
@@ -20,7 +23,7 @@ class ZobgdParams(TrajoptParameters):
         self.initial_std = None # dim T x m array of initial stds.
         self.variance_scheduler = None # Variance scheduler.
 
-class ZobgdNp(TrajectoryOptimizer):
+class ZobgdNp(TrajectoryOptimizerNp):
     def __init__(self, system, params):
         super().__init__(system, params)
         
@@ -30,7 +33,7 @@ class ZobgdNp(TrajectoryOptimizer):
         self.variance_scheduler = self.params.variance_scheduler
 
         self.w_std = self.initial_std
-        
+
     def compute_zobg(self, x_trj, u_trj):
         # 1. Take samples to perturb decision variables (u_trj).
         B = self.batch_size
