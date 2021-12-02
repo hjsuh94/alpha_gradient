@@ -30,6 +30,12 @@ class TrajectoryOptimizer:
         self.u_trj = self.u_trj_initial
         self.x_trj = self.system.rollout(self.params.x0, self.u_trj)
 
+        self.T = self.u_trj.shape[0] # horizon.
+        self.dim_x = self.system.dim_x
+        self.dim_u = self.system.dim_u
+
+        self.cost = self.evaluate_cost(self.x_trj, self.u_trj)
+
         self.x_trj_lst = [self.x_trj]
         self.u_trj_lst = [self.u_trj]
         self.cost_lst = [self.cost]
@@ -37,9 +43,6 @@ class TrajectoryOptimizer:
         self.start_time = time.time()
         self.iter = 1
 
-        self.T = self.u_trj.shape[0] # horizon.
-        self.dim_x = self.system.dim_x
-        self.dim_u = self.system.dim_u
 
     def evaluate_cost(self, x_trj, u_trj):
         """
@@ -83,6 +86,10 @@ class TrajectoryOptimizer:
         """
         Iterate local descent until convergence.
         """
+        print("Iteration: {:02d} ".format(0) + " || " +
+              "Current Cost: {0:05f} ".format(self.cost) + " || " +
+              "Elapsed time: {0:05f} ".format(0.0))
+
         while True:
             x_trj_new, u_trj_new = self.local_descent(self.x_trj, self.u_trj)
             cost_new = self.evaluate_cost(x_trj_new, u_trj_new)

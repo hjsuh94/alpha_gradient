@@ -7,12 +7,11 @@ from alpha_gradient.numpy.trajectory_optimizer_np import (
     TrajectoryOptimizerNp
 )
 
-class CemNpParameters(TrajoptParameters):
+class CemNpParams(TrajoptParameters):
     def __init__(self):
         super().__init__()
         self.n_elite = None
         self.batch_size = None 
-        self.elite_frac = None
         self.initial_std = None # dim u array of initial stds.
 
 class CemNp(TrajectoryOptimizerNp):
@@ -21,9 +20,8 @@ class CemNp(TrajectoryOptimizerNp):
         
         self.n_elite = self.params.n_elite
         self.batch_size = self.params.batch_size
-        self.elite_frac = self.params.elite_frac
-        self.initial_std = self.params.initial_std
-        
+        self.std_trj = self.params.initial_std
+
     def local_descent(self, x_trj, u_trj):
         """
         Given batch of x_trj and u_trj, run forward pass of algorithm.

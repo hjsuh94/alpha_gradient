@@ -2,9 +2,11 @@ import numpy as np
 import pydrake.symbolic as ps
 import time
 
-from alpha_gradient.numpy.dynamical_system_np import DynamicalSystemNp
+import torch
 
-class PendulumDynamicsNp(DynamicalSystemNp):
+from alpha_gradient.torch.dynamical_system_torch import DynamicalSystemTorch
+
+class PendulumDynamicsTorch(DynamicalSystemTorch):
     def __init__(self, h):
         super().__init__()
         """
@@ -21,14 +23,15 @@ class PendulumDynamicsNp(DynamicalSystemNp):
         x (np.array, dim: n): state
         u (np.array, dim: m): action
         """
+
         angle = x[0]
         speed = x[1]
 
         # Do semi-implicit integration.
-        next_speed = speed + self.h * (-np.sin(angle) + u[0])
+        next_speed = speed + self.h * (-torch.sin(angle) + u[0])
         next_angle = angle + self.h * next_speed
 
-        x_new = np.array([next_angle, next_speed])
+        x_new = torch.Tensor([next_angle, next_speed])
         return x_new
 
     def dynamics_batch(self, x, u):
@@ -41,13 +44,13 @@ class PendulumDynamicsNp(DynamicalSystemNp):
             xnext (np.array, dim: B x n): batched next state
         """
 
-        angle = x[:,0]
-        speed = x[:,1]
-        torque = u[:,0]
+        angle = x[:,0].clone()
+        speed = x[:,1].clone()
+        torque = u[:,0].clone()
 
-        # Do semi-implicit integration.
-        next_speed = speed + self.h * (-np.sin(angle) + torque)
+        #Do semi-implicit integration.
+        next_speed = speed + self.h * (-torch.sin(angle) + torque)
         next_angle = angle + self.h * next_speed
 
-        x_new = np.vstack((next_angle, next_speed)).transpose()
+        x_new = torch.vstack((next_angle, next_speed)).transpose(0, 1)
         return x_new

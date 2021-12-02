@@ -7,8 +7,9 @@ from alpha_gradient.numpy.trajectory_optimizer_np import (
     TrajectoryOptimizerNp
 )    
 from pydrake.all import InitializeAutoDiff, ExtractGradient
+import pydrake.autodiffutils
 
-class FobgdParams(TrajoptParameters):
+class FobgdNpParams(TrajoptParameters):
     def __init__(self):
         """
         Variance scheduler is a function with
@@ -23,19 +24,22 @@ class FobgdParams(TrajoptParameters):
         self.batch_size = None # Number of samples used for estimation.
         self.initial_std = None # dim T x m array of initial stds.
         self.variance_scheduler = None # Variance scheduler.
+        self.stepsize_scheduler = None
 
 class FobgdNp(TrajectoryOptimizerNp):
     def __init__(self, system, params):
         super().__init__(system, params)
         
-        self.step_size = self.params.step_size
+        self.initial_stepsize = self.params.step_size
         self.batch_size = self.params.batch_size
         self.initial_std = self.params.initial_std
         self.variance_scheduler = self.params.variance_scheduler
+        self.stepsize_scheduler = self.params.stepsize_scheduler
 
+        self.step_size = self.initial_stepsize
         self.w_std = self.initial_std
 
-    def compute_fobg(self, x_trj, u_trj):
+    def compute_fobg(self, u_trj):
         """
         NOTE (terry-suh): Eigen autodiff hates batches, so we're unfortunately 
         limited to for loops. Batches are technically doable with a lot of waste
@@ -45,17 +49,17 @@ class FobgdNp(TrajectoryOptimizerNp):
         B = self.batch_size
         w_batch = np.random.normal(0, self.w_std, (B, self.T, self.dim_u))
         u_trj_batch = u_trj + w_batch
-        x_trj_batch = np.tile(x_trj, (B,1,1))
 
         # 2. Compute gradients.
         fobg = np.zeros((self.T, self.dim_u))
         for b in range(B):
             u_trj = InitializeAutoDiff(u_trj_batch[b,:,:])
+            x_trj = self.system.rollout(self.x0, u_trj,
+                dtype=pydrake.autodiffutils.AutoDiffXd)
             cost = self.evaluate_cost(x_trj, u_trj)
-            dfdu = ExtractGradient(cost)
-            fobg += dfdu
+            dfdu = ExtractGradient(np.array([cost]))
+            fobg += dfdu.transpose()
         fobg /= B
-
         return fobg
 
     def local_descent(self, x_trj, u_trj):
@@ -65,10 +69,11 @@ class FobgdNp(TrajectoryOptimizerNp):
             x_trj (np.array, shape (T + 1) x n): nominal state trajectory.
             u_trj (np.array, shape T x m) : nominal input trajectory
         """
-        fobg = self.compute_fobg(x_trj, u_trj)
+        fobg = self.compute_fobg(u_trj)
 
         u_trj_new = u_trj - self.step_size * fobg
         x_trj_new = self.system.rollout(self.x0, u_trj_new)
         self.w_std = self.variance_scheduler(self.iter, self.initial_std)
+        self.step_size = self.stepsize_scheduler(self.iter, self.initial_stepsize)
 
         return x_trj_new, u_trj_new
