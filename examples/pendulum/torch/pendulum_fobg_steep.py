@@ -6,7 +6,7 @@ import time
 import torch
 
 from alpha_gradient.torch.fobgd_torch import FobgdTorch, FobgdTorchParams
-from alpha_gradient.stepsize_scheduler import ManualScheduler
+from alpha_gradient.stepsize_scheduler import ArmijoGoldsteinLineSearchTorch
 from pendulum_dynamics_torch import PendulumDynamicsTorch
 
 system = PendulumDynamicsTorch(0.02)
@@ -22,16 +22,13 @@ params.xd_trj = torch.tile(torch.Tensor([np.pi, 0]), (T+1,1))
 params.u_trj_initial = 0.1 * torch.ones((T, 1))
 
 params.batch_size = 100
-params.initial_std = 5.0 * torch.ones((T, 1))
+params.initial_std = 0.5 * torch.ones((T, 1))
 
 def variance_scheduler(iter, initial_std):
     return initial_std / iter
 params.variance_scheduler = variance_scheduler
 
-def stepsize_schedule(iter, initial_stepsize):
-    return initial_stepsize
-
-stepsize_scheduler = ManualScheduler(stepsize_schedule, 0.01)
+stepsize_scheduler = ArmijoGoldsteinLineSearchTorch(0.2, 0.2, 0.1)
 params.stepsize_scheduler = stepsize_scheduler
 
 trajopt = FobgdTorch(system, params)

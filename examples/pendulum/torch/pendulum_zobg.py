@@ -6,6 +6,7 @@ import time
 import torch
 
 from alpha_gradient.torch.zobgd_torch import ZobgdTorch, ZobgdTorchParams
+from alpha_gradient.stepsize_scheduler import ManualScheduler
 from pendulum_dynamics_torch import PendulumDynamicsTorch
 
 system = PendulumDynamicsTorch(0.02)
@@ -20,18 +21,17 @@ params.x0 = torch.Tensor([0, 0])
 params.xd_trj = torch.tile(torch.Tensor([np.pi, 0]), (T+1,1))
 params.u_trj_initial = 0.1 * torch.ones((T, 1))
 
-params.step_size = 0.015
 params.batch_size = 100
 params.initial_std = 0.1 * torch.ones((T, 1))
 
 def variance_scheduler(iter, initial_std):
     return initial_std / iter
+params.variance_scheduler = variance_scheduler
 
-def stepsize_scheduler(iter, initial_stepsize):
+def stepsize_schedule(iter, initial_stepsize):
     return initial_stepsize / (iter ** 0.3)
 
-
-params.variance_scheduler = variance_scheduler
+stepsize_scheduler = ManualScheduler(stepsize_schedule, 0.015)
 params.stepsize_scheduler = stepsize_scheduler
 
 trajopt = ZobgdTorch(system, params)

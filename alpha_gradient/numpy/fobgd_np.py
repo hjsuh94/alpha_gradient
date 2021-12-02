@@ -20,7 +20,6 @@ class FobgdNpParams(TrajoptParameters):
         -var : current variance.
         """
         super().__init__()
-        self.step_size = None # Step size for gradietn descent.
         self.batch_size = None # Number of samples used for estimation.
         self.initial_std = None # dim T x m array of initial stds.
         self.variance_scheduler = None # Variance scheduler.
@@ -30,13 +29,10 @@ class FobgdNp(TrajectoryOptimizerNp):
     def __init__(self, system, params):
         super().__init__(system, params)
         
-        self.initial_stepsize = self.params.step_size
         self.batch_size = self.params.batch_size
         self.initial_std = self.params.initial_std
         self.variance_scheduler = self.params.variance_scheduler
         self.stepsize_scheduler = self.params.stepsize_scheduler
-
-        self.step_size = self.initial_stepsize
         self.w_std = self.initial_std
 
     def compute_fobg(self, u_trj):
@@ -69,11 +65,15 @@ class FobgdNp(TrajectoryOptimizerNp):
             x_trj (np.array, shape (T + 1) x n): nominal state trajectory.
             u_trj (np.array, shape T x m) : nominal input trajectory
         """
+        # 1. Compute gradient.
         fobg = self.compute_fobg(u_trj)
 
-        u_trj_new = u_trj - self.step_size * fobg
+        # 2. Determine adequate stepsize.
+        step_size = self.stepsize_scheduler.find_stepsize(
+            self.objective, fobg, u_trj)
+        u_trj_new = u_trj - step_size * fobg
         x_trj_new = self.system.rollout(self.x0, u_trj_new)
         self.w_std = self.variance_scheduler(self.iter, self.initial_std)
-        self.step_size = self.stepsize_scheduler(self.iter, self.initial_stepsize)
+        self.stepsize_scheduler.step()
 
         return x_trj_new, u_trj_new

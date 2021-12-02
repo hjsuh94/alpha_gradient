@@ -43,6 +43,9 @@ class TrajectoryOptimizer:
         self.start_time = time.time()
         self.iter = 1
 
+        self.objective = lambda u_trj: self.evaluate_cost(
+            self.system.rollout(self.x0, u_trj), u_trj)        
+
 
     def evaluate_cost(self, x_trj, u_trj):
         """
