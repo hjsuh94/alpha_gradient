@@ -28,7 +28,9 @@ trajopt = CemTorch(system, params)
 trajopt.iterate(30)
 
 plt.figure()
-plt.plot(trajopt.x_trj[:,0], trajopt.x_trj[:,1])
+plt.plot(trajopt.x_trj[:,0], trajopt.x_trj[:,1], 'k-')
+plt.xlabel('theta')
+plt.ylabel('thetadot')
 plt.show()
 
 np.save("examples/pendulum/torch/analysis/cem.npy", trajopt.x_trj)
