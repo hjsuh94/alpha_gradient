@@ -74,7 +74,7 @@ class ArmijoGoldsteinLineSearchTorch(StepsizeScheduler):
         self.alpha = alpha # often set to 0.5
         self.beta = beta # often set to 0.5
         self.max_stepsize = max_stepsize
-        self.max_counter = 100
+        self.max_counter = 20
 
     def find_stepsize(self, objective, gradient, x0):
         # we'll implement steepest descent here. simple but can be slow.

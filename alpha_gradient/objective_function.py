@@ -56,7 +56,7 @@ class ObjectiveFunction:
 
     def zero_order_batch_gradient(self, x, sample_size, variance):
         """
-        Compute the first order batch gradient, evaluated at x.
+        Compute the zero order batch gradient, evaluated at x.
         """
         samples = np.random.normal(0.0, variance, (sample_size, self.d))
         batch_gradient = np.zeros(self.d)
@@ -64,3 +64,20 @@ class ObjectiveFunction:
             batch_gradient += self.zero_order_gradient(x, samples[k,:])
         batch_gradient /= sample_size
         return batch_gradient / (variance ** 2.0)
+
+    def alpha_order_batch_gradient(self, x, sample_size, variance, alpha):
+        """
+        Compute the first order batch gradient, evaluated at x.
+        """
+        samples = np.random.normal(0.0, variance, (sample_size, self.d))
+
+        batch = self.gradient_batch(x, samples)        
+        fobg = np.average(batch, axis=0)
+
+        batch_gradient = np.zeros(self.d)
+        for k in range(sample_size):
+            batch_gradient += self.zero_order_gradient(x, samples[k,:])
+        batch_gradient /= sample_size
+        zobg = batch_gradient / (variance ** 2.0)
+        
+        return alpha * fobg + (1 - alpha) * zobg
