@@ -17,7 +17,7 @@ class HeavisideAllPositive(ObjectiveFunction):
     def evaluate(self, x, w):
         assert(len(x) == self.d)
         assert(len(w) == self.d)
-        return np.all(x + w >= 0).astype(np.float)
+        return np.all(x + w>=0).astype(np.float)
 
     def evaluate_batch(self, x, w):
         assert(len(x) == self.d)

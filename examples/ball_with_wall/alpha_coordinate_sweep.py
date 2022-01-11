@@ -7,15 +7,16 @@ import pydrake.autodiffutils
 from pydrake.all import InitializeAutoDiff, ExtractGradient
 from alpha_gradient.objective_function import ObjectiveFunction
 from alpha_gradient.statistical_analysis import compute_mean, compute_variance_norm
+from alpha_gradient.lipschitz_estimator import estimate_lipschitz_probability
 from ball_with_wall import BallWithWall
 from ball_with_wall_torch import BallWithWallTorch
 
+
 dmax = 100
 n_gradient_samples = 100
-n_samples = 100
+n_samples = 1000
 sigma = 0.05
 coordinate_range = np.linspace(0, np.pi/2, dmax)
-alpha = 0.5
 
 eval_storage = np.zeros(dmax)
 fom_storage = np.zeros(dmax)
@@ -28,29 +29,35 @@ fov_storage = np.zeros(dmax)
 zov_storage = np.zeros(dmax)
 aov_storage = np.zeros(dmax)
 
+alpha_storage = np.zeros(dmax)
+
+lp_norm = BallWithWallTorch()
+
 for i in tqdm(range(len(coordinate_range))):
     d = 1
-    lp_norm = BallWithWallTorch()
 
     xval = coordinate_range[i]
     x = xval * np.ones(d)
 
     eval_storage[i] = lp_norm.evaluate(x, np.array([0.0]))
-
     fobg_storage = np.zeros((n_gradient_samples, d))
     zobg_storage = np.zeros((n_gradient_samples, d))
     aobg_storage = np.zeros((n_gradient_samples, d))
+    alpha_substorage = np.zeros(n_gradient_samples)
 
     for k in range(n_gradient_samples):
-        fobg_storage[k,:] = lp_norm.first_order_batch_gradient(
+        fobg_storage[k,:], _ = lp_norm.first_order_batch_gradient(
             x, n_samples, sigma/d)
-        zobg_storage[k,:] = lp_norm.zero_order_batch_gradient(
+        zobg_storage[k,:], _ = lp_norm.zero_order_batch_gradient(
             x, n_samples, sigma/d)
-        aobg_storage[k,:] = alpha * fobg_storage[k,:] + (1-alpha) * zobg_storage[k,:]
+        aobg_storage[k,:], alpha_substorage[k] = lp_norm.bias_constrained_aobg(
+            x, n_samples, sigma/d, 0.01, L=1.0)
 
     fom = compute_mean(fobg_storage)
     zom = compute_mean(zobg_storage)
-    aom = compute_mean(aobg_storage)    
+    aom = compute_mean(aobg_storage)
+
+    alpha_storage[i] = compute_mean(alpha_substorage)
 
     fom_zom_diff[i] = np.linalg.norm(fom - zom)
     aom_zom_diff[i] = np.linalg.norm(aom - zom)    
@@ -58,28 +65,32 @@ for i in tqdm(range(len(coordinate_range))):
     zom_storage[i] = np.linalg.norm(zom)
     aom_storage[i] = np.linalg.norm(aom)    
 
-    fov_storage[i] = compute_variance_norm(fobg_storage, 'fro')
-    zov_storage[i] = compute_variance_norm(zobg_storage, 'fro')
-    aov_storage[i] = compute_variance_norm(aobg_storage, 'fro')
+    fov_storage[i] = np.sqrt(compute_variance_norm(fobg_storage, 'fro'))
+    zov_storage[i] = np.sqrt(compute_variance_norm(zobg_storage, 'fro'))
+    aov_storage[i] = np.sqrt(compute_variance_norm(aobg_storage, 'fro'))
 
 plt.figure(figsize=(8,4))
-plt.subplot(3,1,1)
+plt.subplot(4,1,1)
 plt.plot(coordinate_range, fov_storage, 'r-', label=('FOBG Variance'))
 plt.plot(coordinate_range, zov_storage, color='royalblue', label=('ZOBG Variance'))
 plt.plot(coordinate_range, aov_storage, color='springgreen', label=('AOBG Variance'))
 plt.xlabel('Angle thrown (theta)')
 plt.legend()
 
-plt.subplot(3,1,2)
+plt.subplot(4,1,2)
 plt.plot(coordinate_range, fom_zom_diff, 'r-', label=('FOBG Bias'))
 plt.plot(coordinate_range, np.zeros(dmax), color='royalblue', label=('ZOBG Bias'))
 plt.plot(coordinate_range, aom_zom_diff, color='springgreen', label=('AOBG Bias'))
 plt.xlabel('Angle thrown (theta)')
 plt.legend()
 
-plt.subplot(3,1,3)
+plt.subplot(4,1,3)
 plt.plot(coordinate_range, eval_storage, 'k-', label=('Cost Landscape'))
 plt.xlabel('Angle thrown (theta)')
 plt.legend()
-plt.savefig("results_zero.png")
+
+plt.subplot(4,1,4)
+plt.plot(coordinate_range, alpha_storage, color='purple', label=('alpha'))
+plt.xlabel('Angle thrown (theta)')
+plt.legend()
 plt.show()

@@ -10,8 +10,6 @@ from alpha_gradient.lipschitz_estimator import (
     compute_pairwise_lipschitz_matrix, compute_pairwise_lipschitz_vector,
     compute_pairwise_lipschitz_tensor, estimate_lipschitz_probability)
 
-from scipy.optimize import fsolve
-
 import warnings 
 warnings.filterwarnings("error")
 
@@ -19,7 +17,7 @@ heaviside = HeavisideAllPositive(1)
 
 sweep = 100
 xspace = np.linspace(-1, 1, sweep)
-Lbar = 20
+Lbar = 7
 alpha_lst = np.zeros(sweep)
 value_lst = np.zeros(sweep)
 
@@ -27,7 +25,7 @@ for i in tqdm(range(len(xspace))):
     mean = xspace[i]
     sigma = 0.1
     trials = 1000
-    subbatch_size = 5
+    subbatch_size = 3
 
     X = np.random.normal(mean, sigma, (trials, subbatch_size, 1))
     X_flatten = X.reshape((trials * subbatch_size, 1))
@@ -38,7 +36,8 @@ for i in tqdm(range(len(xspace))):
     value_lst[i] = heaviside.evaluate(np.array([mean]), np.zeros(1))
 
 plt.figure()
-plt.plot(xspace, alpha_lst, 'r-')
-plt.plot(xspace, value_lst, 'k-')
+plt.plot(xspace, alpha_lst, 'r-', label='Alpha')
+plt.plot(xspace, value_lst, 'k-', label='Heaviside')
+plt.legend()
 plt.show()
 

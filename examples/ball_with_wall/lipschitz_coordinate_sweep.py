@@ -36,6 +36,7 @@ normalized_value_lst = (value_lst - np.min(value_lst)) / (
     np.max(value_lst) - np.min(value_lst))
 
 plt.figure()
-plt.plot(xspace, alpha_lst, 'r-')
-plt.plot(xspace, normalized_value_lst, 'k-')
+plt.plot(xspace, alpha_lst, 'r-', label='Alpha')
+plt.plot(xspace, normalized_value_lst, 'k-', label='Objective')
+plt.legend()
 plt.show()

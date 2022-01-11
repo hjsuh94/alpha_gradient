@@ -6,7 +6,7 @@ plt.rcParams['text.usetex'] = True
 matplotlib.rcParams.update({'font.size': 22})
 
 from tqdm import tqdm
-from heaviside_objective import HeavisideAllPositive
+from sine_wave_quadratic import SineQuadratic
 
 plt.figure()
 
@@ -15,7 +15,7 @@ sample_size = 1000
 
 #=============================================================================
 
-obj = HeavisideAllPositive(1)
+obj = SineQuadratic(70, 0.1)
 
 stdev = 0.1
 x_range = np.linspace(-1, 1, grid_size)
@@ -52,15 +52,15 @@ plt.plot(x_range, bobj_storage, 'r-', label=r'$F(x)$')
 plt.legend()
 
 plt.subplot(1,3,2)
-plt.plot(x_range, zobg_storage, 'b-', label=r'$\hat{\nabla}^0_x F(x)$')
 plt.plot(x_range, fobg_storage, 'r-', label=r'$\hat{\nabla}^1_x F(x)$')
+plt.plot(x_range, zobg_storage, 'b-', label=r'$\hat{\nabla}^0_x F(x)$')
 plt.legend()
 
 plt.subplot(1,3,3)
+plt.plot(x_range, fobv_storage, 'r-',
+    label=r'Var$(\hat{\nabla}^1_x F(x))$')
 plt.plot(x_range, zobv_storage, 'b-',
     label=r'Var$(\hat{\nabla}^0_x F(x))$')
-plt.plot(x_range, fobv_storage, 'r-',
-    label=r'Var$(\hat{\nabla}^1_x F(x))$')    
 
 plt.legend()
 plt.show()

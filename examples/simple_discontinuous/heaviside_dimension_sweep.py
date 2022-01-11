@@ -10,7 +10,7 @@ from heaviside_objective import HeavisideAllPositive
 
 dmax = 50
 n_gradient_samples = 1000
-n_samples = 1000
+n_samples = 100
 sigma = 2.0
 
 fom_storage = np.zeros(dmax)
@@ -29,9 +29,9 @@ for d in tqdm(range(1,dmax+1)):
 
     for k in range(n_gradient_samples):
         fobg_storage[k,:] = lp_norm.first_order_batch_gradient(
-            x, n_samples, sigma/d)
+            x, n_samples, sigma/np.sqrt(d))
         zobg_storage[k,:] = lp_norm.zero_order_batch_gradient(
-            x, n_samples, sigma/d)
+            x, n_samples, sigma/np.sqrt(d))
 
     fom = compute_mean(fobg_storage)
     zom = compute_mean(zobg_storage)
@@ -46,17 +46,14 @@ for d in tqdm(range(1,dmax+1)):
 
 plt.figure(figsize=(8,4))
 plt.subplot(2,1,1)
-plt.title('Variance')
-
-plt.plot(range(d), fov_storage, 'r-', label=('FOBG'))
-plt.plot(range(d), zov_storage, 'b-', label=('ZOBG'))
+plt.plot(range(d), fov_storage, 'r-', label=('FOBG Variance'))
+plt.plot(range(d), zov_storage, 'b-', label=('ZOBG Variance'))
 plt.xlabel('Dimension (d)')
 plt.legend()
 
 plt.subplot(2,1,2)
-plt.title('Bias')
-plt.plot(range(d), fom_zom_diff, 'r-', label='FOBG')
-plt.plot(range(d), np.zeros(d), 'b-', label='ZOBG')
+plt.plot(range(d), fom_zom_diff, 'r-', label='FOBG Bias (Diff with ZOBG)')
+plt.plot(range(d), np.zeros(d), 'b-', label='ZOBG Bias')
 plt.xlabel('Dimension (d)')
 plt.legend()
 #plt.savefig("results_zero.png")
