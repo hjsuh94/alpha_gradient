@@ -4,6 +4,7 @@ import time
 class OptimizerParameters:
     def __init__(self):
         self.x0_initial = None
+        self.verbose = True
 
 class Optimizer:
     def __init__(self, objective, params):
@@ -36,18 +37,20 @@ class Optimizer:
         """
         Iterate local descent until convergence.
         """
-        print("Iteration: {:02d} ".format(0) + " || " +
-              "Current Cost: {0:05f} ".format(self.cost) + " || " +
-              "Elapsed time: {0:05f} ".format(0.0))
+        if (self.params.verbose):
+            print("Iteration: {:02d} ".format(0) + " || " +
+                "Current Cost: {0:05f} ".format(self.cost) + " || " +
+                "Elapsed time: {0:05f} ".format(0.0))
 
         while True:
             self.x = self.local_descent(self.x)
             self.cost = self.objective.evaluate(self.x, np.zeros(len(self.x)))
 
-            print("Iteration: {:02d} ".format(self.iter) + " || " +
-                  "Current Cost: {0:05f} ".format(self.cost) + " || " +
-                  "Elapsed time: {0:05f} ".format(
-                      time.time() - self.start_time))
+            if (self.params.verbose):
+                print("Iteration: {:02d} ".format(self.iter) + " || " +
+                    "Current Cost: {0:05f} ".format(self.cost) + " || " +
+                    "Elapsed time: {0:05f} ".format(
+                        time.time() - self.start_time))
 
             self.x_lst.append(self.x)
             self.cost_lst.append(self.cost)
@@ -64,7 +67,7 @@ class Optimizer:
 class FobgdOptimizerParams(OptimizerParameters):
     def __init__(self):
         super().__init__()
-        self.variance = None
+        self.stdev = None
         self.sample_size = None
         self.step_size_scheduler = None
 
@@ -85,8 +88,8 @@ class FobgdOptimizer(Optimizer):
         - u_trj (np.array/torch.Tensor, shape: T x m)
         """
         # 1. Compute Fobgd
-        fobg = self.objective.first_order_batch_gradient(
-            x, self.params.sample_size, self.params.variance
+        fobg, _ = self.objective.first_order_batch_gradient(
+            x, self.params.sample_size, self.params.stdev
         )
 
         step_size = self.params.step_size_scheduler.find_stepsize(
@@ -95,12 +98,13 @@ class FobgdOptimizer(Optimizer):
         # 2. Do gradient descent.
         xnew = x - step_size * fobg
         self.params.step_size_scheduler.step()
+
         return xnew
 
 class ZobgdOptimizerParams(OptimizerParameters):
     def __init__(self):
         super().__init__()
-        self.variance = None
+        self.stdev = None
         self.sample_size = None
         self.step_size_scheduler = None
 
@@ -121,14 +125,12 @@ class ZobgdOptimizer(Optimizer):
         - u_trj (np.array/torch.Tensor, shape: T x m)
         """
         # 1. Compute Fobgd
-        zobg = self.objective.zero_order_batch_gradient(
-            x, self.params.sample_size, self.params.variance
+        zobg, _ = self.objective.zero_order_batch_gradient(
+            x, self.params.sample_size, self.params.stdev
         )
-        print(zobg)
-
+        
         step_size = self.params.step_size_scheduler.find_stepsize(
             self.objective.evaluate, zobg, x)
-        print(step_size)
 
         # 2. Do gradient descent.
         xnew = x - step_size * zobg
@@ -138,7 +140,7 @@ class ZobgdOptimizer(Optimizer):
 class AobgdOptimizerParams(OptimizerParameters):
     def __init__(self):
         super().__init__()
-        self.variance = None
+        self.stdev = None
         self.sample_size = None
         self.step_size = None
         self.alpha = None # TODO: make this a step?
@@ -161,9 +163,53 @@ class AobgdOptimizer(Optimizer):
         """
         # 1. Compute Fobgd
         aobg = self.objective.alpha_order_batch_gradient(
-            x, self.params.sample_size, self.params.variance,
+            x, self.params.sample_size, self.params.stdev,
             self.params.alpha
         )
+
+        step_size = self.params.step_size_scheduler.find_stepsize(
+            self.objective.evaluate, aobg, x)        
+
+        # 2. Do gradient descent.
+        xnew = x - step_size * aobg
+        self.params.step_size_scheduler.step()        
+        return xnew
+
+class BiasConstrainedOptimizerParams(OptimizerParameters):
+    def __init__(self):
+        super().__init__()
+        # Smoothing parameters. 
+        self.stdev = None
+        self.sample_size = None
+
+        # Confidence interval parameters
+        self.delta = None
+        self.L = None
+        self.gamma = None
+
+        # Gradinet descent parameters.
+        self.step_size_scheduler = None
+
+class BiasConstrainedOptimizer(Optimizer):
+    def __init__(self, objective, params):
+        """
+        Base class for singlel-shooting trajectory optimizer.
+        system: instance of DynamicalSystems class.
+        params: instance of TrajoptParameters class.
+        """ 
+        super().__init__(objective, params)
+
+    def local_descent(self, x):
+        """
+        Given the current x, compute the gradient and do descent.
+        args:
+        - x_trj (np.array/torch.Tensor, shape: (T+1) x n)
+        - u_trj (np.array/torch.Tensor, shape: T x m)
+        """
+        # 1. Compute Bias constrained.
+        aobg, _ = self.objective.bias_constrained_aobg(
+            x, self.params.sample_size, self.params.stdev,
+            self.params.gamma, self.params.L, self.params.delta)
 
         step_size = self.params.step_size_scheduler.find_stepsize(
             self.objective.evaluate, aobg, x)        

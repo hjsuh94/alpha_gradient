@@ -12,13 +12,12 @@ from pydrake.all import InitializeAutoDiff, ExtractGradient
 from alpha_gradient.objective_function import ObjectiveFunction
 from alpha_gradient.statistical_analysis import compute_mean, compute_variance_norm
 from alpha_gradient.lipschitz_estimator import estimate_lipschitz_probability
-from ball_with_wall import BallWithWall
-from ball_with_wall_torch import BallWithWallTorch
+from pivot_torch import PivotTorch
 
 dmax = 100
 n_gradient_samples = 100
 n_samples = 1000
-sigma = 0.1
+sigma = 0.02
 coordinate_range = np.linspace(0, np.pi/2, dmax)
 
 obj_storage = np.zeros(dmax)
@@ -35,7 +34,7 @@ aov_storage = np.zeros(dmax)
 
 alpha_storage = np.zeros(dmax)
 
-lp_norm = BallWithWallTorch()
+lp_norm = PivotTorch()
 
 for i in tqdm(range(len(coordinate_range))):
     d = 1
@@ -56,7 +55,7 @@ for i in tqdm(range(len(coordinate_range))):
         zobg_storage[k,:], _ = lp_norm.zero_order_batch_gradient(
             x, n_samples, sigma/d)
         aobg_storage[k,:], alpha_substorage[k] = lp_norm.bias_constrained_aobg(
-            x, n_samples, sigma/d, 0.005, L=1.0)
+            x, n_samples, sigma/d, 0.1, L=1.0)
 
     fom = compute_mean(fobg_storage)
     zom = compute_mean(zobg_storage)
@@ -92,14 +91,14 @@ plt.legend()
 plt.subplot(4,1,3)
 plt.plot(coordinate_range, obj_storage, 'k-', label=(r'$f(x,0)$'))
 plt.plot(coordinate_range, bobj_storage, 'm-', label=(r'$F(x)$'))
-plt.plot(0.8331,
-    lp_norm.evaluate(0.8331 * np.ones(1), np.zeros(1)), '*',
+plt.plot(0.7394,
+    lp_norm.evaluate(0.7394 * np.ones(1), np.zeros(1)), '*',
     color='royalblue', markersize=20, alpha=0.6)
-plt.plot(0.4952,
-    lp_norm.evaluate(0.4952 * np.ones(1), np.zeros(1)), '*',
+plt.plot(0.8434,
+    lp_norm.evaluate(0.8434 * np.ones(1), np.zeros(1)), '*',
     color='red', markersize=20, alpha=0.6)
-plt.plot(0.8346,
-    lp_norm.evaluate(0.8346 * np.ones(1), np.zeros(1)), '*',
+plt.plot(0.7577,
+    lp_norm.evaluate(0.7577 * np.ones(1), np.zeros(1)), '*',
     color='springgreen', markersize=20, alpha=0.6)
 plt.plot(0.1,
     lp_norm.evaluate(0.1 * np.ones(1), np.zeros(1)), '^',

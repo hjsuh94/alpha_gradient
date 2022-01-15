@@ -42,7 +42,7 @@ class BallWithWallTorch(ObjectiveFunction):
         x_final = ball_trajectory(
             self.v0, x+w, self.dball, self.hball, self.gball)
         cost_array = -torch.pow(x_final, 2.0).squeeze(0)
-        return cost_array.detach().cpu().numpy()
+        return cost_array.detach().cpu().numpy()[0]
 
     def evaluate_batch(self, x, w):
         assert(len(x) == self.d)

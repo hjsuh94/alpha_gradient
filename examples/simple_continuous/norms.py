@@ -1,6 +1,7 @@
 import numpy as np
 import time
 import warnings
+import torch
 warnings.filterwarnings('error')
 
 from pydrake.all import InitializeAutoDiff, ExtractGradient
@@ -43,10 +44,12 @@ class LpNorm(ObjectiveFunction):
         assert(w.shape[1] == self.d)
 
         B = w.shape[0]
-        dfdx_batch = np.zeros((B,self.d))
-        for k in range(B):
-            dfdx_batch[k,:] = self.gradient(x, w[k,:])
-        return dfdx_batch
+
+        z = torch.tensor(x + w, requires_grad=True)
+        cost_array = torch.sum(torch.norm(z, p=2, dim=1))
+
+        cost_array.backward()
+        return z.grad.detach().cpu().numpy()
 
 def test_Lp_norm():
     p = 2

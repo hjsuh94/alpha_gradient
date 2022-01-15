@@ -137,17 +137,23 @@ class ObjectiveFunction:
         eps = compute_confidence_interval(
             zobg, zobg_var, sample_size, L, delta)[0]
 
+        print(eps)
         # Check if zobg has less variance 
         if (eps > gamma):
             alpha = 0.0
+            print("Too uncertain.")
         else:
             # Optimum of the variance minimization problem.
             alpha_bar = zobg_var / (fobg_var + zobg_var + 1e-5)
             diff = np.linalg.norm(fobg - zobg)
+            print(diff)
             if (alpha_bar * diff <= gamma - eps):
                 alpha = alpha_bar
+                print("Within constraint. Setting to optimum.")
             else:
                 alpha = (gamma - eps) / diff
+                print("Out of constraint. Hitting against constraint.")
+            print(alpha)
 
         assert(alpha >= 0)
         assert(alpha <= 1)
