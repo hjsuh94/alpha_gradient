@@ -226,7 +226,27 @@ class ObjectiveFunctionPolicy(ObjectiveFunction):
         cost = (self.evaluate_batch(x0_batch, w_trj_batch, theta)
          - self.evaluate_batch(x0_batch, w_trj_zero, theta)) # (B)
 
-        policy_likelihood = torch.zeros(B, self.d, 1)
+
+        # NOTE: Below is a batch implementation. However, it tends to be a bit
+        # slower than small-batch for-loops for very large horizons.
+        """
+        x_trj_flatbatch = x_trj_batch[:,0:self.H,:].reshape(
+            B * self.H, self.n) # (B * H, n)
+
+        policy_jacobian_flatbatch = self.policy.policy_jacobian_batch(
+            x_trj_flatbatch, theta).transpose(1,2) # (B*H, d, m)
+
+        w_trj_flatbatch = w_trj_batch.reshape(
+            B * self.H, self.m).unsqueeze(2) # (B*H, m, 1)
+
+        policy_likelihood_flatbatch = torch.bmm(
+            policy_jacobian_flatbatch, w_trj_flatbatch) # (B*H, d, 1)
+
+        policy_likelihood = torch.sum(policy_likelihood_flatbatch.reshape(
+            B, self.H, self.d, 1), dim=1)
+        """
+        
+        policy_likelihood = torch.zeros(B, self.d, 1)        
         for h in range(self.H):
             policy_likelihood = policy_likelihood + torch.bmm(
                 self.policy.policy_jacobian_batch( # (B, d, m)
