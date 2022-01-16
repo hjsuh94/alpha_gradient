@@ -5,6 +5,7 @@ class OptimizerParameters:
     def __init__(self):
         self.x0_initial = None
         self.verbose = True
+        self.filename = ""
 
 class Optimizer:
     def __init__(self, objective, params):
@@ -60,6 +61,9 @@ class Optimizer:
 
             # Go over to next iteration.
             self.iter += 1
+
+        # Save
+        np.save(self.params.filename, np.array(self.cost_lst))
 
         return self.x, self.cost
 

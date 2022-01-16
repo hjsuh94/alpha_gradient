@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import time 
 
 class PolicyOptimizerParameters:
@@ -6,6 +7,7 @@ class PolicyOptimizerParameters:
         self.theta0 = None
         self.verbose = True
         self.sample_size = None
+        self.filename = ""
 
 class PolicyOptimizer:
     def __init__(self, objective, params):
@@ -43,7 +45,7 @@ class PolicyOptimizer:
         Iterate local descent until convergence.
         """
         if (self.params.verbose):
-            print("Iteration: {:02d} ".format(0) + " || " +
+            print("Iteration: {:05d} ".format(0) + " || " +
                 "Current Cost: {0:05f} ".format(self.cost) + " || " +
                 "Elapsed time: {0:05f} ".format(0.0))
 
@@ -58,7 +60,7 @@ class PolicyOptimizer:
                     "Elapsed time: {0:05f} ".format(
                         time.time() - self.start_time))
 
-            self.theta_lst.append(self.theta)
+            self.theta_lst.append(self.theta.numpy())
             self.cost_lst.append(self.cost)
 
             if (self.iter > max_iterations):
@@ -66,6 +68,9 @@ class PolicyOptimizer:
 
             # Go over to next iteration.
             self.iter += 1
+
+        np.save(self.params.filename + "_cost.npy", np.array(self.cost_lst))
+        np.save(self.params.filename + "_params.npy", np.array(self.theta_lst))
 
         return self.theta, self.cost
 
