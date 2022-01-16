@@ -17,9 +17,9 @@ from breakout_trajopt import BreakoutTrajopt
 dynamics = BreakoutDynamics()
 
 # Initial condition.
-x0 = torch.tensor([1.0, 2.0, -0.1, -0.2, 0.1, 0.0, -0.5], dtype=torch.float32)
+x0 = torch.tensor([1.0, 2.0, -0.2, -0.4, 0.1, 0.0, -0.5], dtype=torch.float32)
 xg = torch.tensor([0.0, 2.5, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
-T = 400
+T = 200
 Q = torch.diag(torch.tensor([0, 0, 0, 0, 0, 0, 0], dtype=torch.float32))
 Qd = 100.0 * torch.diag(torch.tensor([1, 1, 0.1, 0.1, 0, 0, 0], dtype=torch.float32))
 R = 0.001 * torch.diag(torch.tensor([1, 1, 1], dtype=torch.float32))
@@ -34,11 +34,9 @@ objective = BreakoutTrajopt(x0, xg, T, dynamics, Q, Qd, R)
 
 #dynamics.render_traj(x_trj_initial, xg)
 
-"""
 plt.figure()
 plt.plot(x_trj_initial[:,0], x_trj_initial[:,1], 'r-')
 plt.show()
-"""
 
 #============================================================================
 params = FobgdOptimizerParams()
