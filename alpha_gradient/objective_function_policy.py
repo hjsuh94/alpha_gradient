@@ -344,12 +344,12 @@ class ObjectiveFunctionPolicy(ObjectiveFunction):
         """
 
         x0_batch = self.sample_x0_batch(sample_size)
-        w_trj_batch = np.random.normal(0.0, stdev, (sample_size, self.d))
+        w_trj_batch = torch.normal(0.0, stdev, (sample_size, self.H, self.m))
         fobg, fobg_var = self.fobg_given_samples(
             x0_batch, w_trj_batch, theta, stdev)
 
         x0_batch = self.sample_x0_batch(sample_size)
-        w_trj_batch = np.random.normal(0.0, stdev, (sample_size, self.d))
+        w_trj_batch = torch.normal(0.0, stdev, (sample_size, self.H, self.m))
         zobg, zobg_var = self.zobg_given_samples(
             x0_batch, w_trj_batch, theta, stdev)
 

@@ -228,3 +228,38 @@ class BreakoutDynamics(DynamicalSystem):
 
         shutil.rmtree("temp")
         print("Done!")
+
+    def render_traj_batch(self, x_trj_batch, xg):
+        print("Rendering trajectory....")
+        os.mkdir("temp")        
+        B = x_trj_batch.shape[0]
+        T = x_trj_batch.shape[1]
+
+        self.counter = 0
+
+        for b in tqdm(range(B)):
+            for t in range(T):
+                plt.figure(figsize=(8,12))
+                self.render(x_trj_batch[b,t])
+                plt.plot(x_trj_batch[b,0:t,0], x_trj_batch[b,0:t,1], 'r-')
+
+                plt.axis('equal')
+                plt.xlim([-self.x_width, self.x_width])
+                plt.ylim([-self.y_width, self.y_width])
+
+                plt.plot(xg[0], xg[1], 'ro')
+
+                plt.savefig("temp/{:05d}.png".format(self.counter))
+                plt.close()
+
+                self.counter += 1
+    
+        # ffmpeg
+        subprocess.call([
+            'ffmpeg', '-i', "temp/%05d.png", 'output.mp4',
+            '-vcodec', 'libx264',# '-pix_fmt', 'yuv420p',
+            '-crf', '18', '-preset', 'slow', '-r', '60'])
+
+        shutil.rmtree("temp")
+        print("Done!")
+
