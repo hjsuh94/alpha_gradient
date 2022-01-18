@@ -39,7 +39,7 @@ class Optimizer:
         Iterate local descent until convergence.
         """
         if (self.params.verbose):
-            print("Iteration: {:02d} ".format(0) + " || " +
+            print("Iteration: {:04d} ".format(0) + " || " +
                 "Current Cost: {0:05f} ".format(self.cost) + " || " +
                 "Elapsed time: {0:05f} ".format(0.0))
 
@@ -48,7 +48,7 @@ class Optimizer:
             self.cost = self.objective.evaluate(self.x, np.zeros(len(self.x)))
 
             if (self.params.verbose):
-                print("Iteration: {:02d} ".format(self.iter) + " || " +
+                print("Iteration: {:04d} ".format(self.iter) + " || " +
                     "Current Cost: {0:05f} ".format(self.cost) + " || " +
                     "Elapsed time: {0:05f} ".format(
                         time.time() - self.start_time))
@@ -63,7 +63,8 @@ class Optimizer:
             self.iter += 1
 
         # Save
-        np.save(self.params.filename, np.array(self.cost_lst))
+        np.save(self.params.filename + "_cost.npy", np.array(self.cost_lst))
+        np.save(self.params.filename + "_params.npy", np.array(self.x_lst))
 
         return self.x, self.cost
 

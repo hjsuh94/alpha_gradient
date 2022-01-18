@@ -16,8 +16,8 @@ from breakout_policyopt import BreakoutPolicyOpt
 
 # Set up dynamics.
 dynamics = BreakoutDynamics()
-sample_size = 100
-stdev = 0.001
+sample_size = 1000
+stdev = 0.01
 
 # Initial condition.
 xg = torch.tensor([0.0, 2.5, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
@@ -60,15 +60,15 @@ objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg, sample_x0_batch
 params = BCPolicyOptimizerParams()
 params.stdev = stdev
 params.sample_size = sample_size
-def constant_step(iter, initial_step): return 1e-6
-params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
+def constant_step(iter, initial_step): return 1e-5 * 1/(iter ** 0.1)
+params.step_size_scheduler = ManualScheduler(constant_step, 1e-5)
 params.theta0 = theta0
-params.filename = "bc_optimizer_5000"
-num_iters = 1000
+params.filename = "bc_optimizer_1000"
+num_iters = 100
 
 params.delta = 0.95
 params.L = 1000
-params.gamma = 5000
+params.gamma = 2000
 
 optimizer = BCPolicyOptimizer(objective, params)
 optimizer.iterate(num_iters)

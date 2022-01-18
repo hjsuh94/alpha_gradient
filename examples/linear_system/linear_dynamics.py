@@ -6,11 +6,11 @@ from alpha_gradient.dynamical_system import DynamicalSystem
 # Simple discrete-time linear dynamical system.
 
 class LinearDynamics(DynamicalSystem):
-    def __init__(self):
+    def __init__(self, d):
         super().__init__()
         self.h = 0.05
-        self.dim_x = 2
-        self.dim_u = 2
+        self.dim_x = d
+        self.dim_u = d
 
         self.A = torch.eye(self.dim_x)
         self.B = torch.eye(self.dim_u)
@@ -58,10 +58,9 @@ class LinearDynamics(DynamicalSystem):
         return x_trj        
 
 def test_linear_dynamics():
-    dynamics = LinearDynamics()
-    dynamics.dynamics(torch.ones(2), torch.ones(2))
-    dynamics.dynamics_batch(torch.ones(10,2), torch.ones(10,2))
-    dynamics.rollout(torch.ones(2), torch.ones(100,2))
-    dynamics.rollout_batch(torch.ones(7, 2), torch.ones(7, 10,2))
-
-test_linear_dynamics()
+    d = 5
+    dynamics = LinearDynamics(d)
+    dynamics.dynamics(torch.ones(d), torch.ones(d))
+    dynamics.dynamics_batch(torch.ones(10,d), torch.ones(10,d))
+    dynamics.rollout(torch.ones(d), torch.ones(100,d))
+    dynamics.rollout_batch(torch.ones(7,d), torch.ones(7, 10,d))

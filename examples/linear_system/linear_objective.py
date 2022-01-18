@@ -8,7 +8,7 @@ from alpha_gradient.policy import Policy
 # Simple discrete-time linear dynamical system.
 
 class LinearPolicyOpt(ObjectiveFunctionPolicy):
-    def __init__(self, H,
+    def __init__(self, H, d,
         dynamics: DynamicalSystem, policy: Policy,
         Q, Qd, R, xg, sample_x0_batch):
         super().__init__()

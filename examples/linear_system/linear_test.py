@@ -15,26 +15,28 @@ from linear_dynamics import LinearDynamics
 from linear_objective import LinearPolicyOpt
 
 # Simple discrete-time linear dynamical system.
+d = 100
+dynamics = LinearDynamics(d)
+sample_size = 10
+stdev = 0.1
 
-dynamics = LinearDynamics()
-sample_size = 100
-stdev = 0.01
 
 # Initial conidtion.
-xg = torch.tensor([0.0, 0.0], dtype=torch.float32)
-T = 50
-Q = torch.diag(torch.tensor([1.0, 1.0], dtype=torch.float32))
-Qd = 10.0 * torch.diag(torch.tensor([1.0, 1.0], dtype=torch.float32))
-R = 0.1 * torch.diag(torch.tensor([0.1, 0.1], dtype=torch.float32))
+xg = torch.zeros(d, dtype=torch.float32)
+T = 10
+Q = torch.diag(torch.ones(d, dtype=torch.float32))
+Qd = 10.0 * torch.diag(torch.ones(d, dtype=torch.float32))
+R = 0.1 * torch.diag(torch.ones(d, dtype=torch.float32))
 
 def sample_x0_batch(sample_size):
-    return torch.normal(torch.ones(sample_size,2), 0.001 * torch.ones(sample_size,2))
+    return torch.normal(
+        torch.ones(sample_size,d), 0.001 * torch.ones(sample_size,d))
     
 print(sample_x0_batch(1000).shape)
 
 # Sset up policy
 policy = LinearPolicy(dynamics.dim_x, dynamics.dim_u)
-theta0 = -0.1 * torch.tensor([1.0, 0.0, 0.1, 0.0])
+theta0 = -0.1 * torch.zeros(d * d)
 
 # Set up objective
 objective = LinearPolicyOpt(T, dynamics, policy, Q, Qd, R, xg, sample_x0_batch)
@@ -43,15 +45,20 @@ objective = LinearPolicyOpt(T, dynamics, policy, Q, Qd, R, xg, sample_x0_batch)
 print(objective.zero_order_batch_gradient(theta0, sample_size, stdev))
 print(objective.first_order_batch_gradient(theta0, sample_size, stdev))
 
-params = ZobgdPolicyOptimizerParams()
+params = BCPolicyOptimizerParams()
 params.stdev = stdev
 params.sample_size = sample_size
-def constant_step(iter, initial_step): return 1e-5
-params.step_size_scheduler = ManualScheduler(constant_step, 1e-5)
+def constant_step(iter, initial_step): return 1e-7
+params.step_size_scheduler = ManualScheduler(constant_step, 1e-7)
+params.filename = "linear_bc5"
 params.theta0 = theta0
 num_iters = 100
 
-optimizer = ZobgdPolicyOptimizer(objective, params)
+params.delta = 0.95
+params.L = 100
+params.gamma = 100
+
+optimizer = BCPolicyOptimizer(objective, params)
 optimizer.iterate(num_iters)
 
 print(optimizer.theta)

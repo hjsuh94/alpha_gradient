@@ -8,6 +8,7 @@ class PolicyOptimizerParameters:
         self.verbose = True
         self.sample_size = None
         self.filename = ""
+        self.gradient_threshold = np.inf
 
 class PolicyOptimizer:
     def __init__(self, objective, params):
@@ -45,7 +46,7 @@ class PolicyOptimizer:
         Iterate local descent until convergence.
         """
         if (self.params.verbose):
-            print("Iteration: {:05d} ".format(0) + " || " +
+            print("Iteration: {:04d} ".format(0) + " || " +
                 "Current Cost: {0:05f} ".format(self.cost) + " || " +
                 "Elapsed time: {0:05f} ".format(0.0))
 
@@ -55,7 +56,7 @@ class PolicyOptimizer:
                 self.theta, self.sample_size).numpy()
 
             if (self.params.verbose):
-                print("Iteration: {:02d} ".format(self.iter) + " || " +
+                print("Iteration: {:04d} ".format(self.iter) + " || " +
                     "Current Cost: {0:05f} ".format(self.cost) + " || " +
                     "Elapsed time: {0:05f} ".format(
                         time.time() - self.start_time))
@@ -102,6 +103,9 @@ class FobgdPolicyOptimizer(PolicyOptimizer):
             theta, self.params.sample_size, self.params.stdev
         )
 
+        if (np.linalg.norm(fobg) > self.params.gradient_threshold):
+            fobg = fobg / self.params.gradient_threshold
+
         step_size = self.params.step_size_scheduler.find_stepsize(
             self.objective.evaluate, fobg, theta)
 
@@ -130,6 +134,9 @@ class ZobgdPolicyOptimizer(PolicyOptimizer):
         zobg, _ = self.objective.zero_order_batch_gradient(
             theta, self.params.sample_size, self.params.stdev
         )
+
+        if (np.linalg.norm(zobg) > self.params.gradient_threshold):
+            zobg = zobg / self.params.gradient_threshold        
         
         step_size = self.params.step_size_scheduler.find_stepsize(
             self.objective.evaluate, zobg, theta)
@@ -174,6 +181,11 @@ class BCPolicyOptimizer(PolicyOptimizer):
         aobg, _ = self.objective.bias_constrained_aobg(
             theta, self.params.sample_size, self.params.stdev,
             self.params.gamma, self.params.L, self.params.delta)
+
+        print(np.linalg.norm(aobg))
+
+        if (np.linalg.norm(aobg) > self.params.gradient_threshold):
+            aobg = aobg / self.params.gradient_threshold                    
 
         step_size = self.params.step_size_scheduler.find_stepsize(
             self.objective.evaluate, aobg, theta)
