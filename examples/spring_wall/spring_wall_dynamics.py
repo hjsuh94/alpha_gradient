@@ -49,7 +49,7 @@ class SpringWallDynamics(DynamicalSystem):
         u_now = u_batch[:,0].clone()
 
         col_ind = (torch.abs(x_now) > 1.0).float()
-        
+
         f = col_ind * (
             -self.stiffness * (
                 x_now - torch.sign(
@@ -92,3 +92,18 @@ class SpringWallDynamics(DynamicalSystem):
         for t in range(T):
             x_trj[:,t+1,:] = self.dynamics_batch(x_trj[:,t,:], u_trj[:,t,:])
         return x_trj
+
+def test_springwall_dynamics():
+    dynamics = SpringWallDynamics(10000.0, 3.0)
+
+    T = 2000
+
+    x0 = torch.tensor([0.0, 100.0])
+    u_trj = 0.0 * torch.ones(T, 1)
+
+    x_trj = dynamics.rollout(x0, u_trj)
+
+    x0_batch = torch.zeros(1000, 2)
+    x0_batch[:,1] = 100.0
+    u_trj_batch = 30.0 *torch.rand(1000, T, 1)
+    x_trj_batch = dynamics.rollout_batch(x0_batch, u_trj_batch)
