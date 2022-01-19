@@ -89,8 +89,8 @@ plt.xlabel('Angle thrown (theta)')
 plt.legend()
 
 plt.subplot(4,1,3)
-plt.plot(coordinate_range, obj_storage, 'k-', label=(r'$f(x,0)$'))
-plt.plot(coordinate_range, bobj_storage, 'm-', label=(r'$F(x)$'))
+plt.plot(coordinate_range, obj_storage, 'k-', label=(r'$f(\mathbf{\theta},0)$'))
+plt.plot(coordinate_range, bobj_storage, 'm-', label=(r'$F(\mathbf{\theta})$'))
 plt.plot(0.7394,
     lp_norm.evaluate(0.7394 * np.ones(1), np.zeros(1)), '*',
     color='royalblue', markersize=20, alpha=0.6)

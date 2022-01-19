@@ -41,9 +41,12 @@ class RobotMap:
     def plot_map(self, ax):
         for i in range(self.N):
             circle = plt.Circle((self.centers[i,0], self.centers[i,1]),
-                self.radius[i], color='b', alpha=0.1)
+                self.radius[i], facecolor='b', edgecolor='k', alpha=0.1)
             ax.add_patch(circle)
-
+            circle = plt.Circle((self.centers[i,0], self.centers[i,1]),
+                self.radius[i], facecolor=[0,0,0,0.0], 
+                edgecolor=[0,0,0,0.6])
+            ax.add_patch(circle)
 
 def test_robot_map():
     centers = torch.tensor([

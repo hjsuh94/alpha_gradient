@@ -16,10 +16,10 @@ from robot_map import RobotMap
 
 # Set up map.
 centers = torch.tensor([
-    [-1,0,1, 1.5, 1.5], 
-    [0,np.sqrt(3),0, 0.5, -0.5]
+    [-0.2,0.5,0.0,0.4, -0.8, -1, 0.0], 
+    [0.5, 1.2, 2.3, 3.2, 3.8, 1., 1.5]
 ]).transpose(0,1)
-radius = torch.tensor([0.2, 0.2, 0.2, 0.1, 0.3])
+radius = torch.tensor([0.2, 0.2, 0.3, 0.5, 0.1, 0.5, 0.2])
 map = RobotMap(centers, radius)
 plt.figure()
 map.plot_map(plt.gca())
@@ -29,19 +29,22 @@ dynamics = RoombaDynamics(map)
 
 # Initial condition.
 x0 = torch.tensor([0,0])
-xg = torch.Tensor([2.0,-0.5])
+xg = torch.Tensor([0.0,4.0])
 T = 200
 Q = torch.eye(2)
 R = 0.001 * torch.eye(2)
 Qd = 10.0 * torch.eye(2)
 
-plt.plot(2.0, -0.5, 'x', label='goal')
+plt.plot(0.0, 4.0, 'x', color='purple', markersize=10, label='goal',
+    alpha=0.9)
 
 # Set up initial u.
 u_initial = 0.01 * np.ones((T,2))
 u_initial = u_initial.reshape(T*2)
 
 objective = RobotMotion(x0, xg, T, dynamics, map, Q, R, Qd)
+
+iters = 500
 
 #============================================================================
 params = BiasConstrainedOptimizerParams()
@@ -54,7 +57,8 @@ params.x0_initial = u_initial
 params.delta = 0.95
 params.L = 10
 params.gamma = 150.0
-num_iters = 200
+params.filename = "mp_bc"
+num_iters = iters
 
 optimizer = BiasConstrainedOptimizer(objective, params)
 optimizer.iterate(num_iters)
@@ -70,7 +74,8 @@ params.sample_size = 500
 def constant_step(iter, initial_step): return 0.01
 params.step_size_scheduler = ManualScheduler(constant_step, 0.01)
 params.x0_initial = u_initial
-num_iters = 200
+params.filename = "mp_zobg"
+num_iters = iters
 
 optimizer = ZobgdOptimizer(objective, params)
 optimizer.iterate(num_iters)
@@ -86,7 +91,8 @@ params.sample_size = 500
 def constant_step(iter, initial_step): return 0.01
 params.step_size_scheduler = ManualScheduler(constant_step, 0.01)
 params.x0_initial = u_initial
-num_iters = 200
+params.filename = "mp_fobg"
+num_iters = iters
 
 optimizer = FobgdOptimizer(objective, params)
 optimizer.iterate(num_iters)

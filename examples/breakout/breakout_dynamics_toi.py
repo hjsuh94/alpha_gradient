@@ -212,6 +212,41 @@ class BreakoutDynamics(DynamicalSystem):
             edgecolor='springgreen', alpha=0.1)
         plt.gca().add_patch(plt_polygon)
 
+    def render_horizontal(self, ax, x):
+        # Draw ball
+        circle = plt.Circle((x[1], x[0]),
+        self.ball_radius, facecolor='r', edgecolor='black', alpha=0.6)
+        ax.add_patch(circle)
+
+        # Draw pad
+        polygon = np.array([
+            self.pad_height / 2 * np.array([1, 1, -1, -1]),
+            self.pad_width / 2 * np.array([1, -1, -1, 1]),
+        ])
+
+        x[6] += np.pi 
+
+        R_WP_next = np.array([
+            [np.cos(x[6]), -np.sin(x[6])],
+            [np.sin(x[6]), np.cos(x[6])]])
+
+        box_poly = R_WP_next.dot(polygon) + x[4:6].numpy()[:,None]
+
+        plt_polygon = plt.Polygon(
+            np.transpose(box_poly), facecolor='blue',
+            edgecolor='black', alpha=0.8)
+        ax.add_patch(plt_polygon)
+
+        # Draw 
+        polygon = np.array([
+            self.y_width * np.array([1, 1, -1, -1]),
+            self.x_width * np.array([1, -1, -1, 1]),
+        ])
+        plt_polygon = plt.Polygon(
+            np.transpose(polygon), facecolor='springgreen',
+            edgecolor='springgreen', alpha=0.1)
+        ax.add_patch(plt_polygon)        
+
     def render_traj(self, x_trj, xg):
         print("Rendering trajectory....")
         os.mkdir("temp")        
@@ -257,7 +292,8 @@ class BreakoutDynamics(DynamicalSystem):
                 plt.xlim([-self.x_width, self.x_width])
                 plt.ylim([-self.y_width, self.y_width])
 
-                plt.plot(xg[0], xg[1], 'ro')
+                plt.plot(xg[0], xg[1], 'o', color='purple', alpha=0.8,
+                    markersize=10.0)
 
                 plt.savefig("temp/{:05d}.png".format(self.counter))
                 plt.close()

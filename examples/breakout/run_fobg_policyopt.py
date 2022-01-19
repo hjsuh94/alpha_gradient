@@ -13,6 +13,7 @@ from alpha_gradient.policy import LinearPolicy
 
 from breakout_dynamics_toi import BreakoutDynamics
 from breakout_policyopt import BreakoutPolicyOpt
+from initial_distribution import sample_x0_batch, sample_x0_batch_narrow
 
 # Set up dynamics.
 dynamics = BreakoutDynamics()
@@ -26,32 +27,13 @@ Q = torch.diag(torch.tensor([0, 0, 0, 0, 0, 0, 0], dtype=torch.float32))
 Qd = 100.0 * torch.diag(torch.tensor([1, 1, 0.1, 0.1, 0, 0, 0], dtype=torch.float32))
 R = 0.001 * torch.diag(torch.tensor([1, 1, 1], dtype=torch.float32))
 
-# Set up sampling function for x0.
-def sample_x0_batch(sample_size):
-    #ball_x0 = 1.8 * (2.0 * torch.rand(sample_size) - 1.0)
-    #ball_y0 = 2.0 + torch.rand(sample_size)
-
-    ball_x0 = 1.0 * torch.ones(sample_size) + torch.normal(
-        0, 1.0, (sample_size,1)).squeeze(1)
-    ball_y0 = 2.0 * torch.ones(sample_size) + torch.normal(
-        0, 0.2, (sample_size,1)).squeeze(1)
-    ball_vx0 = -0.2 * ball_x0 + torch.normal(0.0, 0.01, (sample_size,1)).squeeze(1)
-    ball_vy0 = -0.2 * ball_y0 + torch.normal(0.0, 0.01, (sample_size,1)).squeeze(1)
-
-    pad_x0 = torch.normal(0.0, 0.5, (sample_size,1)).squeeze(1)
-    pad_y0 = torch.normal(0.0, 0.01, (sample_size,1)).squeeze(1)
-    pad_theta0 = torch.normal(0.0, 0.01, (sample_size,1)).squeeze(1)
-
-    return torch.vstack(
-        (ball_x0, ball_y0, ball_vx0, ball_vy0, pad_x0, pad_y0, pad_theta0)
-        ).transpose(0,1)
-
 # Set up policy.
 policy = LinearPolicy(dynamics.dim_x, dynamics.dim_u)
 theta0 = torch.zeros(policy.d)
 
 # Set up Objective.
-objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg, sample_x0_batch)
+objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg,
+    sample_x0_batch_narrow)
 
 #print(objective.zero_order_batch_gradient(theta0, sample_size, 0.01))
 #print(objective.first_order_batch_gradient(theta0, sample_size, 0.01))
@@ -60,10 +42,10 @@ objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg, sample_x0_batch
 params = FobgdPolicyOptimizerParams()
 params.stdev = stdev
 params.sample_size = sample_size
-def constant_step(iter, initial_step): return 1e-5 * 1/(iter ** 0.1)
-params.step_size_scheduler = ManualScheduler(constant_step, 1e-5)
+def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
+params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
 params.theta0 = theta0
-params.filename = "fobg"
+params.filename = "fobg_narrow"
 num_iters = 200
 
 optimizer = FobgdPolicyOptimizer(objective, params)

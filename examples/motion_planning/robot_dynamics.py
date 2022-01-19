@@ -83,11 +83,11 @@ class RoombaDynamics(RobotDynamics):
         output:
             xnext: dim: n next state
         """
-        if self.map.in_collision(x):
-            xnext = x
+        xnext = x + self.h * u
+        if self.map.in_collision(xnext):
+            return x
         else:
-            xnext = x + self.h * u
-        return xnext
+            return xnext
 
     def dynamics_batch(self, x, u):
         """
@@ -100,12 +100,14 @@ class RoombaDynamics(RobotDynamics):
         B = x.shape[0]
         xnext = torch.zeros(B, self.dim_x)
 
-        collision_ind = self.map.in_collision_batch(
-            x).repeat(self.dim_x,1).transpose(0,1).int().float()
+        xnext = x + self.h * u
 
-        xnext = collision_ind * x + (
-            1.0 - collision_ind) * (x + self.h * u)
-        return xnext, collision_ind[:,0]
+        collision_ind = self.map.in_collision_batch(
+            xnext).repeat(self.dim_x,1).transpose(0,1).int().float()
+
+        xnext_bar = collision_ind * x + (
+            1.0 - collision_ind) * (xnext)
+        return xnext_bar, collision_ind[:,0]
 
 class BicycleDynamics(RobotDynamics):
     def __init__(self, map):

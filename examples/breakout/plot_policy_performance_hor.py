@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt 
 
 plt.rcParams['text.usetex'] = True
-matplotlib.rcParams.update({'font.size': 22})
+matplotlib.rcParams.update({'font.size': 16})
 
 
 from alpha_gradient.objective_function_policy import ObjectiveFunctionPolicy
@@ -89,22 +89,39 @@ plt.legend()
 plt.show()
 
 plt.figure(figsize=(16,12))
-plt.subplot(1,3,1)
+
+ax1 = plt.subplot(2,2,1)
+x_trj_batch, _ = objective.rollout_policy_batch(
+    sample_x0_batch(10), torch.zeros(10, T, objective.m),
+    torch.tensor(theta_zobg))
+
+batch_num = 9
+horizon = 125
+dynamics.render_horizontal(ax1, x_trj_batch[batch_num,horizon,:])
+plt.plot(x_trj_batch[batch_num,0:horizon,1],
+    x_trj_batch[batch_num,0:horizon,0], 'r-')
+plt.xlim([-dynamics.y_width, dynamics.y_width])
+plt.ylim([-dynamics.x_width, dynamics.x_width])
+plt.axis('equal')
+
+
+
+plt.subplot(2,2,2)
 plt.title('FOBG')
 x_trj_batch, _ = objective.rollout_policy_batch(
     sample_x0_batch(200), torch.zeros(200, T, objective.m),
     torch.tensor(theta_fobg))
 for b in range(x_trj_batch.shape[0]):
-    plt.plot(x_trj_batch[b,:,0], x_trj_batch[b,:,1], 'k-', alpha=0.05)
-plt.plot(x_trj_batch[:,0,0], x_trj_batch[:,0,1], 'ko', alpha=0.6,
+    plt.plot(x_trj_batch[b,:,1], x_trj_batch[b,:,0], 'k-', alpha=0.05)
+plt.plot(x_trj_batch[:,0,1], x_trj_batch[:,0,0], 'ko', alpha=0.6,
     markersize=2.0, label='initial')
-plt.plot(x_trj_batch[:,-1,0], x_trj_batch[:,-1,1], 'ro', alpha=0.6,
+plt.plot(x_trj_batch[:,-1,1], x_trj_batch[:,-1,0], 'ro', alpha=0.6,
     markersize=2.0, label='final')
-plt.plot(0.0, 2.5, 'o', color='purple', alpha=0.8,
+plt.plot(2.5, 0.0, 'o', color='purple', alpha=0.8,
     markersize=10.0, label='target point')    
 polygon = np.array([
-    dynamics.x_width * np.array([1, 1, -1, -1]),
-    dynamics.y_width * np.array([1, -1, -1, 1]),
+    dynamics.y_width * np.array([1, 1, -1, -1]),
+    dynamics.x_width * np.array([1, -1, -1, 1]),
 ])
 plt_polygon = plt.Polygon(
     np.transpose(polygon), facecolor='springgreen',
@@ -112,21 +129,21 @@ plt_polygon = plt.Polygon(
 plt.gca().add_patch(plt_polygon)    
 #plt.legend()
 
-plt.xlim([-dynamics.x_width, dynamics.x_width])
-plt.ylim([-dynamics.y_width, dynamics.y_width])
+plt.xlim([-dynamics.y_width, dynamics.y_width])
+plt.ylim([-dynamics.x_width, dynamics.x_width])
 
-plt.subplot(1,3,2)
+plt.subplot(2,2,3)
 plt.title('ZOBG')
 x_trj_batch, _ = objective.rollout_policy_batch(
     sample_x0_batch(200), torch.zeros(200, T, objective.m),
     torch.tensor(theta_zobg))
 for b in range(x_trj_batch.shape[0]):
-    plt.plot(x_trj_batch[b,:,0], x_trj_batch[b,:,1], 'k-', alpha=0.05)
-plt.plot(x_trj_batch[:,0,0], x_trj_batch[:,0,1], 'ko', alpha=0.6,
+    plt.plot(x_trj_batch[b,:,1], x_trj_batch[b,:,0], 'k-', alpha=0.05)
+plt.plot(x_trj_batch[:,0,1], x_trj_batch[:,0,0], 'ko', alpha=0.6,
     markersize=2.0, label='initial')
-plt.plot(x_trj_batch[:,-1,0], x_trj_batch[:,-1,1], 'bo', alpha=0.6,
+plt.plot(x_trj_batch[:,-1,1], x_trj_batch[:,-1,0], 'bo', alpha=0.6,
     color='blue', markersize=2.0, label='final')
-plt.plot(0.0, 2.5, 'o', color='purple', alpha=0.8,
+plt.plot(2.5, 0.0, 'o', color='purple', alpha=0.8,
     markersize=10.0, label='target point')
 plt_polygon = plt.Polygon(
     np.transpose(polygon), facecolor='springgreen',
@@ -134,21 +151,21 @@ plt_polygon = plt.Polygon(
 plt.gca().add_patch(plt_polygon)        
 #plt.legend()
 
-plt.xlim([-dynamics.x_width, dynamics.x_width])
-plt.ylim([-dynamics.y_width, dynamics.y_width])
+plt.xlim([-dynamics.y_width, dynamics.y_width])
+plt.ylim([-dynamics.x_width, dynamics.x_width])
 
-plt.subplot(1,3,3)
+plt.subplot(2,2,4)
 plt.title('AOBG')
 x_trj_batch, _ = objective.rollout_policy_batch(
     sample_x0_batch(200), torch.zeros(200, T, objective.m),
     torch.tensor(theta_aobg))
 for b in range(x_trj_batch.shape[0]):
-    plt.plot(x_trj_batch[b,:,0], x_trj_batch[b,:,1], 'k-', alpha=0.05)
-plt.plot(x_trj_batch[:,0,0], x_trj_batch[:,0,1], 'ko', alpha=0.6,
+    plt.plot(x_trj_batch[b,:,1], x_trj_batch[b,:,0], 'k-', alpha=0.05)
+plt.plot(x_trj_batch[:,0,1], x_trj_batch[:,0,0], 'ko', alpha=0.6,
     markersize=2.0, label='initial')
-plt.plot(x_trj_batch[:,-1,0], x_trj_batch[:,-1,1], 'bo', alpha=0.6,
+plt.plot(x_trj_batch[:,-1,1], x_trj_batch[:,-1,0], 'bo', alpha=0.6,
     color='springgreen', markersize=2.0, label='final')
-plt.plot(0.0, 2.5, 'o', color='purple', alpha=0.8,
+plt.plot(2.5, 0.0, 'o', color='purple', alpha=0.8,
     markersize=10.0, label='target point')
 plt_polygon = plt.Polygon(
     np.transpose(polygon), facecolor='springgreen',
@@ -156,11 +173,11 @@ plt_polygon = plt.Polygon(
 plt.gca().add_patch(plt_polygon)        
 #plt.legend()
 
-plt.xlim([-dynamics.x_width, dynamics.x_width])
-plt.ylim([-dynamics.y_width, dynamics.y_width])
+plt.xlim([-dynamics.y_width, dynamics.y_width])
+plt.ylim([-dynamics.x_width, dynamics.x_width])
 
 plt.show()
 
-dynamics.render_traj_batch(x_trj_batch[0:20], np.array([0.0, 2.5]))
+#dynamics.render_traj_batch(x_trj_batch[0:20], np.array([0.0, 2.5]))
 
 
