@@ -7,40 +7,43 @@ import matplotlib.pyplot as plt
 
 from alpha_gradient.dynamical_system import DynamicalSystem
 
-class CurlingDynamics(DynamicalSystem):
-    def __init__(self, k, d):
+class FrictionDynamics(DynamicalSystem):
+    def __init__(self, vs, mu):
         super().__init__()
 
-        self.h = 0.001
+        self.h = 0.01
         self.dim_x = 4
         self.dim_u = 1
 
         # Geometry parameters.
         self.mass = 0.1
-        self.stiffness = k
-        self.damping = d
+        self.width = 0.1
+
+        self.vs = vs
+        self.mu = mu
 
     def dynamics(self, x, u):
         x1_now = x[0].clone()
         x2_now = x[1].clone()
         v1_now = x[2].clone()
         v2_now = x[3].clone()
+        u_now = u[0].clone()
 
-        # Semi-implicit integration.
+        # Compute forces.
         x_diff = x2_now - x1_now
         v_diff = v2_now - v1_now
 
-        # Spring forces upon collision.
-        if x_diff < 1.0:
-            f1_now = self.stiffness * (x_diff - 1.0) + u
-            f2_now = -self.stiffness * (x_diff - 1.0)
-        else:
-            f1_now = u
-            f2_now = torch.zeros(1)
-        
+        in_contact = torch.tensor((torch.abs(x_diff) < self.width)).float()
+
+        friction = -in_contact * torch.clamp(self.mu * v_diff,
+            min= -self.mu * self.vs, max = self.mu * self.vs)
+
+        f1_now = -friction + u_now
+        f2_now = friction
+
         # Damping on velocity.
-        v1_next = self.damping * v1_now + self.h / self.mass * f1_now
-        v2_next = self.damping * v2_now + self.h / self.mass * f2_now
+        v1_next = v1_now + self.h / self.mass * f1_now
+        v2_next = v2_now + self.h / self.mass * f2_now
         x1_next = x1_now + self.h * v1_next
         x2_next = x2_now + self.h * v2_next
 
@@ -52,25 +55,27 @@ class CurlingDynamics(DynamicalSystem):
         x_batch: torch.Tensor, shape: (B x n)
         u_batch: torch.Tensor, shape: (B x 1)
         """
-
         x1_now = x_batch[:,0].clone()
         x2_now = x_batch[:,1].clone()
         v1_now = x_batch[:,2].clone()
         v2_now = x_batch[:,3].clone()
         u_now = u_batch[:,0].clone()
 
-        # Semi-implicit integration.
+        # Compute forces.
         x_diff = x2_now - x1_now
         v_diff = v2_now - v1_now
 
-        # Spring forces upon collision.
-        col_ind = (x_diff < 1.0).float()
-        f1_now = col_ind * self.stiffness * (x_diff - 1.0) + u_now
-        f2_now = -col_ind * self.stiffness * (x_diff - 1.0)
+        in_contact = torch.tensor((torch.abs(x_diff) < self.width)).float()
+
+        friction = -in_contact * torch.clamp(self.mu * v_diff,
+            min= -self.mu * self.vs, max = self.mu * self.vs)
+
+        f1_now = -friction + u_now
+        f2_now = friction
 
         # Damping on velocity.
-        v1_next = self.damping * v1_now + self.h / self.mass * f1_now
-        v2_next = self.damping * v2_now + self.h / self.mass * f2_now
+        v1_next = v1_now + self.h / self.mass * f1_now
+        v2_next = v2_now + self.h / self.mass * f2_now
         x1_next = x1_now + self.h * v1_next
         x2_next = x2_now + self.h * v2_next
 
@@ -85,6 +90,7 @@ class CurlingDynamics(DynamicalSystem):
         returns:
         - x_trj (torch.Tensor, dim: (T+1) x n): batch of state trajs.
         """
+        u_trj = torch.tensor(u_trj)
         T = u_trj.shape[0]
         x_trj = torch.zeros((T+1, self.dim_x))
         x_trj[0,:] = x0
@@ -109,13 +115,13 @@ class CurlingDynamics(DynamicalSystem):
             x_trj[:,t+1,:] = self.dynamics_batch(x_trj[:,t,:], u_trj[:,t,:])
         return x_trj
 
-def test_curling_dynamics():
-    dynamics = CurlingDynamics(100.0, 0.995)
+def test_friction_dynamics():
+    dynamics = FrictionDynamics(0.01, 0.01)
 
     T = 4000
 
-    x0 = torch.tensor([0.0, 5.0, 0.0, 0.0])
-    u_trj = 5.0 * torch.ones(T, 1)
+    x0 = torch.tensor([0.0, 0.0, 0.001, 0.0])
+    u_trj = 0.00001 * torch.ones(T, 1)
     u_trj[2000:4000] = 0.0
     x_trj = dynamics.rollout(x0, u_trj)
 
@@ -125,6 +131,10 @@ def test_curling_dynamics():
     x_trj_batch = dynamics.rollout_batch(x0_batch, u_trj_batch)
 
     plt.figure()
+    plt.subplot(1,2,1)
     plt.plot(x_trj[:,0])
     plt.plot(x_trj[:,1])
+    plt.subplot(1,2,2)
+    plt.plot(x_trj[:,2])
+    plt.plot(x_trj[:,3])    
     plt.show()

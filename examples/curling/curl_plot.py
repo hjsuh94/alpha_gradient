@@ -18,9 +18,9 @@ from alpha_gradient.plotting_tools import plot_cost
 from curling_objective import CurlingObjective
 from curling_dynamics import CurlingDynamics
 
-cost_fobg = np.load("data/curling/curl_fobg_1000_cost.npy")
-cost_zobg = np.load("data/curling/curl_zobg_1000_cost.npy")
-cost_aobg = np.load("data/curling/curl_aobg_1000_cost.npy")
+cost_fobg = np.load("data/curling2/curl_fobg_1000_cost.npy")
+cost_zobg = np.load("data/curling2/curl_zobg_1000_cost.npy")
+cost_aobg = np.load("data/curling2/curl_aobg_1000_cost.npy")
 
 plt.figure()
 plt.title('k=1000.0')
