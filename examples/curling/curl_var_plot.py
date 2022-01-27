@@ -22,10 +22,12 @@ stiffness = np.load('data/curling_var/stiffness.npy')
 cost_fobg = np.load("data/curling_var/curl_fobg_var.npy")
 cost_zobg = np.load("data/curling_var/curl_zobg_var.npy")
 
+stiffness = np.log(np.exp(stiffness / 0.1))
+
 plt.figure()
 plot_data(plt.gca(), stiffness, np.log(cost_fobg), 3, 'red', label='FOBG')
 plot_data(plt.gca(), stiffness, np.log(cost_zobg), 3, 'blue', label='ZOBG')
-plt.xlabel('Contact Stiffness (log-scale)')
+plt.xlabel("$km/c^2$ (log-scale)")
 plt.ylabel('Variance (log-scale)')
 plt.legend()
 plt.show()

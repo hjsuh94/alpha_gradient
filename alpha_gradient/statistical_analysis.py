@@ -39,7 +39,7 @@ def compute_variance_norm(x, p=2):
         covariance += np.linalg.norm(deviations[i]) ** 2.0
     return covariance / B
 
-def compute_confidence_interval(mu, sigma, N, L, delta):
+def compute_confidence_interval_roots(mu, sigma, N, L, delta):
     """
     Compute Bernstein bounds given the empirical mean mu, sigma
     number of samples N, max bound L, and confidence value delta.
@@ -49,11 +49,24 @@ def compute_confidence_interval(mu, sigma, N, L, delta):
     # Compute coefficients of the quadratic inequality.
     # a * eps^2 + b * eps + c >= 0.
     a = N / 2
-    b = L / (3 * N) * np.log((1-delta) / (d + 1))
+    b = L / 3 * np.log((1-delta) / (d + 1))
     c = sigma * np.log((1-delta) / (d + 1))
 
     # Compute the determinant.
     return np.roots(np.array([a,b,c]))
+
+def compute_confidence_interval(mu, sigma, N, L, delta):
+    """
+    Compute Bernstein bounds given the empirical mean mu, sigma
+    number of samples N, max bound L, and confidence value delta.
+    """
+    d = len(mu) # dimension of the problem.
+
+    # Compute coefficients of the quadratic inequality.
+    ft = np.sqrt((2 * sigma ** 2.0 * np.log((d + 1) / delta)) / N)
+    st = 2 * L / (3 * N) * np.log((d + 1) / delta)
+    # Compute the determinant.
+    return ft + st
 
 def compute_confidence_probability(d, sigma, N, L, eps):
     """
@@ -63,7 +76,7 @@ def compute_confidence_probability(d, sigma, N, L, eps):
     # Compute coefficients of the quadratic inequality.
     # a * eps^2 + b * eps + c >= 0.
     numer = -eps ** 2.0 * N / 2
-    denom = sigma ** 2.0 + L * eps / (3 * N)
+    denom = sigma ** 2.0 + L * eps / 3
     p = (d + 1) * np.exp(numer / denom)
 
     # Compute the determinant.

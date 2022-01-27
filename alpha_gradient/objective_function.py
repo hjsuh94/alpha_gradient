@@ -135,7 +135,7 @@ class ObjectiveFunction:
 
         # Compute confidence interval. 
         eps = compute_confidence_interval(
-            zobg, zobg_var, sample_size, L, delta)[0]
+            zobg, zobg_var, sample_size, L, delta)
 
         print(eps)
         # Check if zobg has less variance 

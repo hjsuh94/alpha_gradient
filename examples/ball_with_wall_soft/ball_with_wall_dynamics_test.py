@@ -6,7 +6,7 @@ from matplotlib import cm
 from tqdm import tqdm
 
 plt.rcParams['text.usetex'] = True
-matplotlib.rcParams.update({'font.size': 22})
+matplotlib.rcParams.update({'font.size': 16})
 
 import pydrake.autodiffutils
 from pydrake.all import InitializeAutoDiff, ExtractGradient
@@ -19,22 +19,22 @@ from ball_with_wall_dynamics_no_dome import BallWithWallSoftDynamicsNoDome
 
 dynamics = BallWithWallSoftDynamics()
 dynamics_no_dome = BallWithWallSoftDynamicsNoDome()
-T = 83
+T = 80
 dynamics.T = T
 dynamics_no_dome.T = T
 
-T_sub =70
+T_sub = 40
 
 batch_size = 15
 arrow_scale = 0.01
 distance_thrown = torch.zeros(batch_size)
 distance_thrown_no_dome = torch.zeros(batch_size)
-plt.figure()
-plt.subplot(1,2,1)
+plt.figure(figsize=(16,4))
+plt.subplot(1,3,1)
 theta_batch = torch.linspace(0.68, 0.73, batch_size)
 for b in range(batch_size):
     x_trj = dynamics.rollout(theta_batch[b])
-    plt.plot(x_trj[:,0], x_trj[:,1], color='magenta', alpha=0.5)
+    plt.plot(x_trj[:,0], x_trj[:,1], color='magenta', alpha=0.2)
 
     plt.arrow(x_trj[-1,0], x_trj[-1,1], 
         arrow_scale * x_trj[-1,2], arrow_scale * x_trj[-1,3],
@@ -45,9 +45,16 @@ for b in range(batch_size):
         color='magenta', alpha=0.5, head_width = 0.005,
         width=0.0005)        
     distance_thrown[b] = x_trj[dynamics.T, 0]
-    
+dynamics.render(plt.gca())    
+plt.axis('equal')
+plt.xlim([1.35, 1.6])
+plt.ylim([0.5, 0.55])
+plt.gca().axis('off')
+
+plt.subplot(1,3,2)
+for b in range(batch_size):
     x_trj = dynamics_no_dome.rollout(theta_batch[b])
-    plt.plot(x_trj[:,0], x_trj[:,1], color='springgreen', alpha=0.5)
+    plt.plot(x_trj[:,0], x_trj[:,1], color='springgreen', alpha=0.2)
     plt.arrow(x_trj[-1,0], x_trj[-1,1], 
         arrow_scale * x_trj[-1,2], arrow_scale * x_trj[-1,3],
         color='springgreen', alpha=0.5, head_width = 0.005,
@@ -58,13 +65,13 @@ for b in range(batch_size):
         width=0.0005)            
     distance_thrown_no_dome[b] = x_trj[dynamics.T, 0] 
 
-dynamics.render(plt.gca())
+dynamics_no_dome.render(plt.gca())
 plt.axis('equal')
-plt.xlim([1.3, 1.6])
-plt.ylim([0.4, 0.6])
+plt.xlim([1.35, 1.6])
+plt.ylim([0.5, 0.55])
 plt.gca().axis('off')
 
-plt.subplot(1,2,2)
+plt.subplot(1,3,3)
 batch_size = 100
 distance_thrown = torch.zeros(batch_size)
 distance_thrown_no_dome = torch.zeros(batch_size)

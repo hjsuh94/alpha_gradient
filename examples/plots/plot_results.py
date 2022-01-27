@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from alpha_gradient.plotting_tools import plot_cost
 
 plt.rcParams['text.usetex'] = True
-matplotlib.rcParams.update({'font.size': 22})
+matplotlib.rcParams.update({'font.size': 30})
 
 plt.figure()
 

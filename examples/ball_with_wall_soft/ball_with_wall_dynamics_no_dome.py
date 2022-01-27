@@ -242,14 +242,19 @@ class BallWithWallSoftDynamicsNoDome(DynamicalSystem):
             self.height * np.array([1, 0, 0, 1]),
         ])
         plt_polygon = plt.Polygon(
-            np.transpose(polygon), facecolor='green',
+            np.transpose(polygon), facecolor='springgreen',
             edgecolor='black', alpha=0.1)
         plt.gca().add_patch(plt_polygon)
 
-        circle = plt.Circle(
-            (self.dist, self.height), self.radius, color='g', alpha=0.1)
+        polygon = np.array([
+            self.dist + self.width/2 * np.array([1, 1, -1, -1]),
+            self.height * np.array([1, 0, 0, 1]),
+        ])
 
-        plt.gca().add_patch(circle)
+        plt_polygon = plt.Polygon(
+            np.transpose(polygon), facecolor='none',
+            edgecolor='black', alpha=1.0)
+        plt.gca().add_patch(plt_polygon)
 
 
 

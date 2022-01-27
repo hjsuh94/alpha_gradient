@@ -314,14 +314,13 @@ class BallWithWallSoftDynamics(DynamicalSystem):
             edgecolor='black', alpha=1.0)
         plt.gca().add_patch(plt_polygon)
 
+        circle = plt.Circle(
+            (self.dist, self.height), self.radius, color='magenta', alpha=0.1)
+        plt.gca().add_patch(circle)            
 
         circle = plt.Circle(
-           (self.dist, self.height), self.radius, color='magenta', alpha=0.1)
+            (self.dist, self.height), self.radius, facecolor='none',
+                edgecolor='black', alpha=1.0)
         plt.gca().add_patch(circle)
-        circle = plt.Circle(
-           (self.dist, self.height), self.radius, facecolor='none', 
-           alpha=1.0, edgecolor='black')
-        plt.gca().add_patch(circle)        
-
 
 
