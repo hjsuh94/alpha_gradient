@@ -43,7 +43,6 @@ class CemNp(TrajectoryOptimizerNp):
                 self.system.rollout(self.x0, u_trj_cand), u_trj_cand)
 
         # 3. Pick the best K trajectories.
-        # NOTE(terry-suh): be careful what "best" means. 
         # In the reward setting, this is the highest. In cost, it's lowest.
         best_idx = np.argpartition(cost_array, self.n_elite)[:self.n_elite]
 

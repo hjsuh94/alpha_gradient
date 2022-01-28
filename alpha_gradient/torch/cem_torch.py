@@ -60,8 +60,6 @@ class CemTorch(TrajectoryOptimizerTorch):
                 u_trj_candidates, self.gpu)
 
         # 3. Pick the best K trajectories.
-        # NOTE(terry-suh): be careful what "best" means. 
-        # In the reward setting, this is the highest. In cost, it's lowest.
         best_idx = torch.topk(cost_array, self.n_elite, largest=False)[1]
         best_trjs = u_trj_candidates[best_idx,:,:]
 

@@ -36,11 +36,6 @@ class FobgdNp(TrajectoryOptimizerNp):
         self.w_std = self.initial_std
 
     def compute_fobg(self, u_trj):
-        """
-        NOTE (terry-suh): Eigen autodiff hates batches, so we're unfortunately 
-        limited to for loops. Batches are technically doable with a lot of waste
-        in memory, should investigate later.
-        """
         # 1. Take samples to perturb decision variables (u_trj).
         B = self.batch_size
         w_batch = np.random.normal(0, self.w_std, (B, self.T, self.dim_u))
