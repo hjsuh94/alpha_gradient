@@ -1,7 +1,8 @@
 import numpy as np
 from alpha_gradient.statistical_analysis import (
     compute_mean, compute_variance_norm,
-    compute_confidence_interval
+    compute_confidence_interval,
+    compute_confidence_interval_roots
 )
 
 class ObjectiveFunction:
@@ -137,7 +138,7 @@ class ObjectiveFunction:
         eps = compute_confidence_interval(
             zobg, zobg_var, sample_size, L, delta)
 
-        print(eps)
+        print("Confidence: " + str(eps))
         # Check if zobg has less variance 
         if (eps > gamma):
             alpha = 0.0

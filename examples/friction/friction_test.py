@@ -59,7 +59,7 @@ num_iters = iters
 
 params.delta = 0.95
 params.L = 100.0
-params.gamma = 1e4
+params.gamma = 2e4
 
 optimizer = BiasConstrainedOptimizer(objective, params)
 optimizer.iterate(num_iters)

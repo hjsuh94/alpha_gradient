@@ -33,7 +33,7 @@ theta0 = torch.zeros(policy.d)
 
 # Set up Objective.
 objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg,
-    sample_x0_batch_narrow)
+    sample_x0_batch)
 
 #print(objective.zero_order_batch_gradient(theta0, sample_size, 0.01))
 #print(objective.first_order_batch_gradient(theta0, sample_size, 0.01))
@@ -50,7 +50,7 @@ num_iters = 200
 
 params.delta = 0.95
 params.L = 1000
-params.gamma = 2000
+params.gamma = 1000
 
 optimizer = BCPolicyOptimizer(objective, params)
 optimizer.iterate(num_iters)

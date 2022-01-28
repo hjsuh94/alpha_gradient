@@ -33,7 +33,7 @@ theta0 = torch.zeros(policy.d)
 
 # Set up Objective.
 objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg,
-    sample_x0_batch_narrow)
+    sample_x0_batch)
 
 #print(objective.zero_order_batch_gradient(theta0, sample_size, 0.01))
 #print(objective.first_order_batch_gradient(theta0, sample_size, 0.01))

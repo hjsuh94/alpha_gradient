@@ -20,7 +20,7 @@ def compute_covariance_norm(x, p=2):
     covariance = np.zeros((x.shape[1], x.shape[1]))
     for i in range(B):
         covariance += np.outer(deviations[i], deviations[i])
-    covariance /= B
+    covariance /= (B - 1)
     return np.linalg.norm(covariance, p)# / x.shape[1])
 
 def compute_variance_norm(x, p=2):
@@ -37,7 +37,7 @@ def compute_variance_norm(x, p=2):
     covariance = 0.0
     for i in range(B):
         covariance += np.linalg.norm(deviations[i]) ** 2.0
-    return covariance / B
+    return covariance / (B - 1)
 
 def compute_confidence_interval_roots(mu, sigma, N, L, delta):
     """
@@ -63,7 +63,7 @@ def compute_confidence_interval(mu, sigma, N, L, delta):
     d = len(mu) # dimension of the problem.
 
     # Compute coefficients of the quadratic inequality.
-    ft = np.sqrt((2 * sigma ** 2.0 * np.log((d + 1) / delta)) / N)
+    ft = np.sqrt((2 * sigma * np.log((d + 1) / delta)) / N)
     st = 2 * L / (3 * N) * np.log((d + 1) / delta)
     # Compute the determinant.
     return ft + st
