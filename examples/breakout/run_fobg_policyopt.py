@@ -11,14 +11,16 @@ from alpha_gradient.optimizer_policy import (
 from alpha_gradient.stepsize_scheduler import ManualScheduler   
 from alpha_gradient.policy import LinearPolicy 
 
-from breakout_dynamics_toi import BreakoutDynamics
+from breakout_dynamics_smooth import BreakoutDynamics
 from breakout_policyopt import BreakoutPolicyOpt
 from initial_distribution import sample_x0_batch, sample_x0_batch_narrow
 
 # Set up dynamics.
-dynamics = BreakoutDynamics()
+
 sample_size = 1000
 stdev = 0.01
+
+kappa_array = np.array([5])
 
 # Initial condition.
 xg = torch.tensor([0.0, 2.5, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
@@ -27,29 +29,51 @@ Q = torch.diag(torch.tensor([0, 0, 0, 0, 0, 0, 0], dtype=torch.float32))
 Qd = 100.0 * torch.diag(torch.tensor([1, 1, 0.1, 0.1, 0, 0, 0], dtype=torch.float32))
 R = 0.001 * torch.diag(torch.tensor([1, 1, 1], dtype=torch.float32))
 
-# Set up policy.
-policy = LinearPolicy(dynamics.dim_x, dynamics.dim_u)
-theta0 = torch.zeros(policy.d)
+for i in range(len(kappa_array)):
 
-# Set up Objective.
-objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg,
-    sample_x0_batch)
+    kappa = np.power(10.0, 0)
+    dynamics = BreakoutDynamics()
+    dynamics.kappa = kappa
 
-#print(objective.zero_order_batch_gradient(theta0, sample_size, 0.01))
-#print(objective.first_order_batch_gradient(theta0, sample_size, 0.01))
+    # Set up policy.
+    policy = LinearPolicy(dynamics.dim_x, dynamics.dim_u)
+    theta0 = torch.zeros(policy.d)
 
-#============================================================================
-params = FobgdPolicyOptimizerParams()
-params.stdev = stdev
-params.sample_size = sample_size
-def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
-params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
-params.theta0 = theta0
-params.filename = "fobg_narrow"
-num_iters = 200
+    # Set up Objective.
+    objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg,
+        sample_x0_batch_narrow)
 
-optimizer = FobgdPolicyOptimizer(objective, params)
-optimizer.iterate(num_iters)
+    print(objective.zero_order_batch_gradient(theta0, sample_size, 0.0001))
+    print(objective.first_order_batch_gradient(theta0, sample_size, 0.0001))
+
+    #============================================================================
+    params = FobgdPolicyOptimizerParams()
+    params.stdev = stdev
+    params.sample_size = sample_size
+    def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
+    params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
+    params.theta0 = theta0
+    params.filename = "fobg_{:01d}".format(i)
+    num_iters = 300
+
+    optimizer = FobgdPolicyOptimizer(objective, params)
+    optimizer.iterate(num_iters)
+
+    #============================================================================
+    """
+    params = ZobgdPolicyOptimizerParams()
+    params.stdev = stdev
+    params.sample_size = sample_size
+    def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
+    params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
+    params.theta0 = theta0
+    params.filename = "zobg_{:01d}".format(i)
+    num_iters = 300
+
+    optimizer = ZobgdPolicyOptimizer(objective, params)
+    optimizer.iterate(num_iters)
+    """
+
 
 x_trj_batch, _ = objective.rollout_policy_batch(
     sample_x0_batch(100), torch.zeros(100, T, objective.m),

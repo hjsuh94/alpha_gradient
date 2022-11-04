@@ -57,7 +57,7 @@ class BreakoutDynamics(DynamicalSystem):
             center = torch.tensor([self.padball_width / 2, 0])
             dist_to_center = torch.linalg.vector_norm(X_PB - center)
             dist = dist_to_center - self.padball_radius
-            normal X= (X_PB - center) / dist_to_center
+            normal = (X_PB - center) / dist_to_center
         elif (x_pb < -self.padball_width / 2):
             center = torch.tensor([-self.padball_width / 2, 0])
             dist_to_center = torch.linalg.vector_norm(X_PB - center)
