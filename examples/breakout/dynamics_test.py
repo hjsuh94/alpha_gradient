@@ -10,11 +10,12 @@ from alpha_gradient.optimizer import (
     BiasConstrainedOptimizer, BiasConstrainedOptimizerParams)
 from alpha_gradient.stepsize_scheduler import ManualScheduler    
 
-from breakout_dynamics_smooth import BreakoutDynamics
+from breakout_dynamics_smooth_geom import BreakoutDynamics
 from breakout_trajopt import BreakoutTrajopt
 
 # Set up dynamics.
 dynamics = BreakoutDynamics()
+dynamics.kappa = np.power(10.0, 0.0)
 
 # Initial condition.
 x0 = torch.tensor([1.0, 2.0, -0.2, -0.4, 1.0, 0.0, -0.2], dtype=torch.float32)
