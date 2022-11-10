@@ -13,11 +13,11 @@ from alpha_gradient.stepsize_scheduler import ManualScheduler
 from alpha_gradient.policy import LinearPolicy 
 
 #from breakout_dynamics_smooth_geom import BreakoutDynamics
-from breakout_dynamics_toi import BreakoutDynamics
+from breakout_dynamics_implicit_geom import BreakoutDynamics
 from breakout_policyopt import BreakoutPolicyOpt
 from initial_distribution import (
     sample_x0_batch, sample_x0_batch_narrow,
-    sample_x0_batch_single)
+    sample_x0_batch_single, sample_x0_batch_vert)
 
 # Set up dynamics.
 
@@ -25,7 +25,9 @@ sample_size = 1000
 stdev = 0.01
 
 #kappa_array = np.array([1, 1.5, 2, 2.5, 3, 3.5, 4])
-kappa_array = [10]
+#kappa_array = [10]
+
+kappa_array = [3, 1, 1.5, 2, 2.5]
 
 # Initial condition.
 xg = torch.tensor([0.0, 2.5, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
@@ -59,9 +61,9 @@ for i in tqdm(range(len(kappa_array))):
     def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
     params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
     params.theta0 = theta0
-    #params.filename = "fobg_{:.1f}".format(kappa_array[i])
-    params.filename = "fobg_relu"
-    num_iters = 50
+    params.filename = "fobg_softplus_{:.1f}".format(kappa_array[i])
+    #params.filename = "fobg_relu_highvar"
+    num_iters = 200
 
     optimizer = FobgdPolicyOptimizer(objective, params)
     optimizer.iterate(num_iters)
@@ -70,13 +72,12 @@ for i in tqdm(range(len(kappa_array))):
         sample_x0_batch(100), torch.zeros(100, T, objective.m),
         optimizer.theta)
 
-    dynamics.render_traj_batch(x_trj_batch, xg)
+    #dynamics.render_traj_batch(x_trj_batch, xg)
 
-    plt.figure()
-    for b in range(x_trj_batch.shape[0]):
-        plt.plot(x_trj_batch[b,:,0], x_trj_batch[b,:,1])
-    plt.show()
-
+    #plt.figure()
+    #for b in range(x_trj_batch.shape[0]):
+    #    plt.plot(x_trj_batch[b,:,0], x_trj_batch[b,:,1])
+    #plt.show()
 
     #============================================================================
     print("ZOBG Optimization, Kappa={:.1f}".format(kappa_array[i]))    
@@ -86,8 +87,8 @@ for i in tqdm(range(len(kappa_array))):
     def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
     params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
     params.theta0 = theta0
-    #params.filename = "zobg_{:.1f}".format(kappa_array[i])  
-    params.filename = "zobg_relu"
+    params.filename = "zobg_softplus_{:.1f}".format(kappa_array[i])  
+    #params.filename = "zobg_relu_highvar"
     num_iters = 200
 
 
