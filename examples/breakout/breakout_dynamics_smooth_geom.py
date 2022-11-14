@@ -20,7 +20,7 @@ class BreakoutDynamics(DynamicalSystem):
 
         # Geometry parameters.
         self.pad_width = 0.8
-        self.pad_height = 0.08 # 0.08
+        self.pad_height = 0.05 # 0.08
         self.pad_radius = 0.0
         self.ball_radius = 0.15
 
