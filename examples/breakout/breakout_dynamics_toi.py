@@ -20,7 +20,7 @@ class BreakoutDynamics(DynamicalSystem):
         self.pad_width = 0.8
         self.pad_height = 0.05
         self.ball_radius = 0.15
-        self.collision_loss = 0.8
+        self.collision_loss = 1.0
         self.damping = 0.999
         # Render parameters
         self.x_width = 2.0

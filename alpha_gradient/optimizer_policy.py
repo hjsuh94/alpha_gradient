@@ -25,7 +25,6 @@ class PolicyOptimizer:
         self.cost = self.objective.evaluate_expected(
             self.theta, self.sample_size).numpy()
 
-        print(self.cost)
         self.theta_lst = [self.theta]
         self.cost_lst = [self.cost]
         self.start_time = time.time()

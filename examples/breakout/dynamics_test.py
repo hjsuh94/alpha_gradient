@@ -10,14 +10,15 @@ from alpha_gradient.optimizer import (
     BiasConstrainedOptimizer, BiasConstrainedOptimizerParams)
 from alpha_gradient.stepsize_scheduler import ManualScheduler    
 
-from breakout_dynamics_smooth import BreakoutDynamics
+from breakout_dynamics_implicit_geom import BreakoutDynamics
 from breakout_trajopt import BreakoutTrajopt
 
 # Set up dynamics.
 dynamics = BreakoutDynamics()
+dynamics.kappa = np.power(10.0, 4.2)
 
 # Initial condition.
-x0 = torch.tensor([1.0, 2.0, -0.2, -0.4, 1.0, 0.0, -0.2], dtype=torch.float32)
+x0 = torch.tensor([1.0, 2.0, -0.2, -0.4, 0.6, 0.0, -0.2], dtype=torch.float32)
 xg = torch.tensor([0.0, 2.5, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
 T = 200
 Q = torch.diag(torch.tensor([0, 0, 0, 0, 0, 0, 0], dtype=torch.float32))
@@ -28,11 +29,11 @@ R = 0.001 * torch.diag(torch.tensor([1, 1, 1], dtype=torch.float32))
 u_initial = torch.zeros(T,3)
 u_initial[:,0] = 0.0
 u_initial[:,1] = 0.0
-x_trj_initial = dynamics.rollout(x0, u_initial)
+x_trj_initial = dynamics.rollout_batch(x0.unsqueeze(0), u_initial.unsqueeze(0))
 u_initial = u_initial.reshape(T*3)
 objective = BreakoutTrajopt(x0, xg, T, dynamics, Q, Qd, R)
 
-#dynamics.render_traj(x_trj_initial, xg)
+dynamics.render_traj(x_trj_initial[0], xg)
 
 """
 coordinates = torch.rand(1000,2)

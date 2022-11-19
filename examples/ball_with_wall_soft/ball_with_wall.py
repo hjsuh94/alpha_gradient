@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from tqdm import tqdm
+import torch
 
-import pydrake.autodiffutils
-from pydrake.all import InitializeAutoDiff, ExtractGradient
 from alpha_gradient.objective_function import ObjectiveFunction
+from alpha_gradient.statistical_analysis import compute_mean, compute_variance_norm
 
 def ball_trajectory(v0, theta, d, h, g, get_trajectory=False):
     xt = 2 * (v0 ** 2) * np.sin(theta) * np.cos(theta) / g
@@ -29,55 +29,55 @@ def ball_trajectory(v0, theta, d, h, g, get_trajectory=False):
 
     return x_final, trj
 
-class BallWithWall(ObjectiveFunction):
-    def __init__(self):
+class BallWithWallSoftPlusObjective(ObjectiveFunction):
+    def __init__(self, dynamics):
         super().__init__(1)
+        self.dynamics = dynamics
         self.d = 1
-        self.v0 = 1
-        self.dball = 0.06
-        self.hball = 0.02
-        self.gball = 9.81
 
     def evaluate(self, x, w):
-        assert(len(x) == self.d)
-        assert(len(w) == self.d)
-        x_final, trj = ball_trajectory(
-            self.v0, x+w, self.dball, self.hball, self.gball)
-        return -x_final ** 2.0
+        trj = self.dynamics.rollout(x + w)
+        return -trj[-1,0] ** 2.0
 
     def evaluate_batch(self, x, w):
-        assert(len(x) == self.d)
-        assert(w.shape[1] == self.d)
         B = w.shape[0]
-
-        cost_array = np.zeros(B)
-        for i in range(B):
-            x_final, trj = ball_trajectory(
-                self.v0, x+w[i], self.dball, self.hball, self.gball)
-            cost_array[i] = -x_final  ** 2.0
-        return cost_array
+        trjs = self.dynamics.rollout_batch(x + w)
+        return -trjs[:,-1,0] ** 2.0
 
     def gradient(self, x, w):
-        assert(len(x) == self.d)
-        assert(len(w) == self.d)
-        x_autodiff = InitializeAutoDiff(x+w)
-        x_final, trj = ball_trajectory(
-            self.v0, x_autodiff, self.dball, self.hball, self.gball)
-        x_final_cost = -x_final ** 2.0
-        dfdx = ExtractGradient(x_final_cost)
-        return dfdx
+
+        z = torch.tensor(x + w, requires_grad=True, dtype=torch.float32)
+        trj = self.dynamics.rollout(z)
+        cost = trj[-1, 0]
+        cost.backward()
+        return z.grad.detach().numpy()
 
     def gradient_batch(self, x, w):
-        assert(len(x) == self.d)
-        assert(w.shape[1] == self.d)
-
         B = w.shape[0]        
-        dfdx_array = np.zeros((B,1))
-        for b in range(B):
-            x_autodiff = InitializeAutoDiff(x + w[b])
-            x_final, trj = ball_trajectory(
-                self.v0, x_autodiff, self.dball, self.hball, self.gball)
-            x_final_cost = -x_final ** 2.0
-            dfdx = ExtractGradient(x_final_cost)
-            dfdx_array[b] = dfdx
-        return dfdx_array
+        z = torch.tensor(x + w, requires_grad=True, dtype=torch.float32)
+        trjs = self.dynamics.rollout_batch(z.squeeze(1))
+        cost = torch.sum(-trjs[:,-1,0] ** 2.0)
+        cost.backward()
+        return z.grad.detach().numpy()
+
+    def zero_order_gradient_batch(self, x, w, stdev):
+        """
+        Evaluate zero-order gradient batch.
+        input: x of shape n, w of shape (B, m).
+        output: dfdx^0(x) of shape (B, n).
+        """
+        B = w.shape[0]
+        # This should be of shape B.
+        cost = self.evaluate_batch(x, w.squeeze()) - self.evaluate_batch(
+            x, np.zeros(B))
+        # This should be of shape B x m
+        return np.multiply(cost[:,None], w) / (stdev ** 2.0)
+
+    def zobg_given_samples(self, x, samples, stdev):
+        """
+        Compute zero order batch gradient GIVEN the samples directly.
+        Sample must be of shape (N, D) where N is sample size, D is 
+        dimension of underlying data. 
+        """
+        batch = self.zero_order_gradient_batch(x, samples, stdev).detach().numpy()
+        return compute_mean(batch), compute_variance_norm(batch, 2)
