@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from alpha_gradient.objective_function_policy import ObjectiveFunctionPolicy
 from alpha_gradient.dynamical_system import DynamicalSystem
-from alpha_gradient.optimizer_policy import (
+from alpha_gradient.optimizer_policy_smoothing import (
     FobgdPolicyOptimizer, FobgdPolicyOptimizerParams,
     ZobgdPolicyOptimizer, ZobgdPolicyOptimizerParams,
     BCPolicyOptimizer, BCPolicyOptimizerParams)
@@ -23,6 +23,7 @@ from initial_distribution import (
 
 sample_size = 1000
 stdev = 0.01
+num_iters = 200
 
 #kappa_array = np.array([1, 1.5, 2, 2.5, 3, 3.5, 4])
 #kappa_array = [10]
@@ -35,13 +36,12 @@ Q = torch.diag(torch.tensor([0, 0, 0, 0, 0, 0, 0], dtype=torch.float32))
 Qd = 100.0 * torch.diag(torch.tensor([1, 1, 0.1, 0.1, 0, 0, 0], dtype=torch.float32))
 R = 0.1 * torch.diag(torch.tensor([1, 1, 1], dtype=torch.float32))
 
+kappa_lst = np.linspace(
+    np.power(10.0, 1), np.power(10.0, 3), num_iters)
+
+
 for i in tqdm(range(len(kappa_array))):
-
-    kappa = np.power(10.0, kappa_array[i])
-    print(kappa_array[i])
     dynamics = BreakoutDynamics()
-    dynamics.kappa = kappa
-
     # Set up policy.
     policy = LinearPolicy(dynamics.dim_x, dynamics.dim_u)
     theta0 = 0.0 * torch.ones(policy.d)
@@ -50,12 +50,10 @@ for i in tqdm(range(len(kappa_array))):
     objective = BreakoutPolicyOpt(T, dynamics, policy, Q, Qd, R, xg,
         sample_x0_batch)
 
-    #print(objective.zero_order_batch_gradient(theta0, sample_size, 0.0001))
-    #print(objective.first_order_batch_gradient(theta0, sample_size, 0.0001))
-
     #============================================================================
-    print("FOBG Optimization, Kappa={:.3f}".format(kappa_array[i]))
+    """
     params = FobgdPolicyOptimizerParams()
+    params.kappa_lst = kappa_lst
     params.stdev = stdev
     params.sample_size = sample_size
     def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
@@ -78,7 +76,7 @@ for i in tqdm(range(len(kappa_array))):
     #for b in range(x_trj_batch.shape[0]):
     #    plt.plot(x_trj_batch[b,:,0], x_trj_batch[b,:,1])
     #plt.show()
-
+    """
     """
     #============================================================================
     print("ZOBG Optimization, Kappa={:.1f}".format(kappa_array[i]))    
@@ -100,6 +98,24 @@ for i in tqdm(range(len(kappa_array))):
         sample_x0_batch(100), torch.zeros(100, T, objective.m),
         optimizer.theta)
     """
+
+    params = BCPolicyOptimizerParams()
+    params.stdev = stdev
+    params.sample_size = sample_size
+    def constant_step(iter, initial_step): return 1e-6 * 1/(iter ** 0.1)
+    params.step_size_scheduler = ManualScheduler(constant_step, 1e-6)
+    params.theta0 = theta0
+    params.filename = "bc"
+    num_iters = 200
+
+    params.delta = 0.95
+    params.L = 10000
+    params.gamma = 10000
+    params.kappa_lst = kappa_lst
+
+    optimizer = BCPolicyOptimizer(objective, params)
+    optimizer.iterate(num_iters)
+    print(optimizer.alpha_lst)
 
 plt.figure()
 for b in range(x_trj_batch.shape[0]):
