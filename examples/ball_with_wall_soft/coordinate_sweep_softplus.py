@@ -7,8 +7,8 @@ import pydrake.autodiffutils
 from pydrake.all import InitializeAutoDiff, ExtractGradient
 from alpha_gradient.objective_function import ObjectiveFunction
 from alpha_gradient.statistical_analysis import compute_mean, compute_variance_norm
-from ball_with_wall import BallWithWall
-from ball_with_wall_torch import BallWithWallTorch
+from ball_with_wall_softplus import BallWithWallSoftPlus
+from examples.ball_with_wall_objective import BallWithWallSoft
 
 dmax = 100
 n_gradient_samples = 100
@@ -30,7 +30,7 @@ aov_storage = np.zeros(dmax)
 
 for i in tqdm(range(len(coordinate_range))):
     d = 1
-    lp_norm = BallWithWallTorch()
+    lp_norm = BallWithWallSoft()
 
     xval = coordinate_range[i]
     x = xval * np.ones(d)

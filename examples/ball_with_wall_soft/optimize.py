@@ -18,7 +18,7 @@ from alpha_gradient.optimizer import (
 from alpha_gradient.stepsize_scheduler import ManualScheduler
 
 from ball_with_wall import BallWithWall
-from ball_with_wall_torch import BallWithWallTorch
+from examples.ball_with_wall_soft.ball_with_wall_objective import BallWithWallTorch
 
 num_trials = 20
 num_iters = 1000

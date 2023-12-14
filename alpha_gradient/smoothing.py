@@ -25,13 +25,18 @@ def relu(x, stiffness):
     return f
 
 def softplus_batch(x_batch, stiffness, kappa):
+    """
     batch_pos_ind = x_batch >= 0
-    batch_neg_ind = x_batch < 0
+    batch_neg_ind = x_batch <= 0
     f_batch = torch.zeros(x_batch.shape[0])
     f_batch[batch_pos_ind] = softplus_batch_positive(
         x_batch[batch_pos_ind], stiffness, kappa)
     f_batch[batch_neg_ind] = softplus_batch_negative(
         x_batch[batch_neg_ind], stiffness, kappa)
+    """
+    
+    softplus = torch.nn.Softplus(beta=kappa, threshold=20)
+    f_batch = stiffness * softplus(x_batch)
     return f_batch
 
 def relu_batch(x_batch, stiffness):

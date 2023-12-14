@@ -8,7 +8,7 @@ from pydrake.all import InitializeAutoDiff, ExtractGradient
 from alpha_gradient.objective_function import ObjectiveFunction
 from alpha_gradient.statistical_analysis import compute_mean, compute_variance_norm
 from ball_with_wall import BallWithWall
-from ball_with_wall_torch import BallWithWallTorch
+from examples.ball_with_wall_soft.ball_with_wall_objective import BallWithWallTorch
 
 dmax = 100
 n_gradient_samples = 100

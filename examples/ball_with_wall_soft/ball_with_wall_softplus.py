@@ -125,7 +125,7 @@ class BallWithWallSoftPlus(DynamicalSystem):
         dists, normals = self.compute_sg_batch(p_now)
         forcemag_batch = softplus_batch(-dists, self.stiffness, self.kappa)
         f_now = forcemag_batch.unsqueeze(1) * normals
-
+        
         v_next = v_now + self.h * (
             f_now + torch.tensor([0.0, -self.g]).reshape((1,2)))
         p_next = p_now + self.h * v_next
